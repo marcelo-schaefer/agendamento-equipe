@@ -1,5 +1,8 @@
 <app-loading [loading]="carregandoInformacoes()">
-<p-toast />
-  <app-informacoes-colaborador [informacoesColaborador]="informacoesColaborador()"></app-informacoes-colaborador>
-  <app-apontamento-horas (enviarSolicitacao)="enviarSolicitacao()" ></app-apontamento-horas>
+  <p-toast />
+  <app-dados-projeto></app-dados-projeto>
+  <!-- <app-apontamento-horas
+    (enviarSolicitacao)="enviarSolicitacao()"
+  ></app-apontamento-horas> -->
+  <app-colaboradores-vinculados></app-colaboradores-vinculados>
 </app-loading>

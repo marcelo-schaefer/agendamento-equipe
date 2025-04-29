@@ -1,14 +1,13 @@
+import { Colaborador } from './colaborador.model';
+
 export interface Persistencia {
+  colaboradores: ColaboradoresPersistencia[];
+}
+
+export interface ColaboradoresPersistencia extends Colaborador {
   nEmpresa: number;
   nTipoColaborador: number;
   nMatricula: number;
-  dData: string;
-  apontamentos: ApontamentosPersistencia[];
-}
-
-export interface ApontamentosPersistencia {
+  nHorasTotais: number;
   nCodigoProjeto: number;
-  nQuantidade: number;
-  aTipo: string;
 }
-

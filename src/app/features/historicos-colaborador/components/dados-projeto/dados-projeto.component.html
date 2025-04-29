@@ -1,0 +1,74 @@
+<p-card>
+  <ng-template pTemplate="title">
+    <h2>Informações do Projeto</h2>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    <div class="grid">
+      <div class="col-3">
+        <h5 class="text-xs text-gray-500">Projeto:</h5>
+        <p-dropdown
+          [options]="listaProjetos || []"
+          optionLabel="ANome"
+          placeholder="Selecione uma data"
+          [disabled]="desabilitar"
+          [emptyMessage]="'Nenhum item disponível'"
+        ></p-dropdown>
+      </div>
+    </div>
+    <br />
+
+    <div class="grid">
+      <div class="col-2">
+        <small class="text-xs text-gray-500">Vigência do Projeto: </small>
+      </div>
+      <div class="col-1">
+        <p class="mb-0 mt-1 text-base">
+          {{ projetoSelecionado.DDataInicio || "" }}
+        </p>
+      </div>
+
+      <div class="col-2">
+        <small class="text-xs text-gray-500">Até: </small>
+      </div>
+
+      <div class="col-1">
+        <p class="mb-0 mt-1 text-base">
+          {{ projetoSelecionado.DDataFim || "" }}
+        </p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="col-2">
+        <small class="text-xs text-gray-500">Status do Projeto: </small>
+      </div>
+      <div class="col-1">
+        <p class="mb-0 mt-1 text-base">
+          {{ projetoSelecionado.AStatus || "" }}
+        </p>
+      </div>
+    </div>
+
+    <br />
+    <br />
+
+    <div class="grid">
+      <div class="col-3">
+        <h5 class="text-xs text-gray-500">Colaborador:</h5>
+        <p-dropdown
+          [options]="listaProjetos || []"
+          optionLabel="ANome"
+          placeholder="Selecione uma data"
+          [disabled]="desabilitar"
+          [emptyMessage]="'Nenhum item disponível'"
+        ></p-dropdown>
+      </div>
+
+      <div class="col-3">
+        <h5 class="text-xs text-gray-500">Horas totais para o projeto:</h5>
+        <p-inputNumber inputId="integeronly" [(ngModel)]="horasProjeto" />
+      </div>
+    </div>
+  </ng-template>
+</p-card>

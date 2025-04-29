@@ -1,31 +1,31 @@
-import { DataApontamento } from './../../services/models/data-apontamento';
-import { Colaborador } from './../../services/models/colaborador.model';
+import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, input, OnInit, Output } from '@angular/core';
 import {
+  FormsModule,
+  ReactiveFormsModule,
   FormGroup,
   FormBuilder,
   Validators,
-  FormArray,
-  FormsModule,
-  ReactiveFormsModule,
 } from '@angular/forms';
-import { Component, EventEmitter, input, OnInit, Output } from '@angular/core';
+import { MessageService, Message } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { CalendarModule } from 'primeng/calendar';
 import { CardModule } from 'primeng/card';
 import { DropdownModule } from 'primeng/dropdown';
-import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { Apontamento } from '../../services/models/apontamento';
-import { CommonModule } from '@angular/common';
 import { InputSwitchModule } from 'primeng/inputswitch';
-import { CalendarModule } from 'primeng/calendar';
+import { InputTextModule } from 'primeng/inputtext';
 import { MessagesModule } from 'primeng/messages';
-import { Message, MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
 import { RippleModule } from 'primeng/ripple';
+import { TableModule } from 'primeng/table';
+import { ToastModule } from 'primeng/toast';
+import { Apontamento } from '../../services/models/apontamento';
+import { Colaborador } from '../../services/models/colaborador.model';
 import { Projeto } from '../../services/models/projeto.model';
 
 @Component({
-  selector: 'app-apontamento-horas',
+  selector: 'app-colaboradores-vinculados',
+  templateUrl: './colaboradores-vinculados.component.html',
+  styleUrls: ['./colaboradores-vinculados.component.css'],
   standalone: true,
   imports: [
     CardModule,
@@ -43,15 +43,14 @@ import { Projeto } from '../../services/models/projeto.model';
     RippleModule,
   ],
   providers: [MessageService],
-  templateUrl: './apontamento-horas.component.html',
-  styleUrls: ['./apontamento-horas.component.css'],
 })
-export class ApontamentoHorasComponent implements OnInit {
+export class ColaboradoresVinculadosComponent implements OnInit {
   @Output()
   enviarSolicitacao: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   public informacoesColaborador = input<Colaborador | undefined>(undefined);
   formApontamento!: FormGroup;
+  projetoSelecionado!: Projeto;
   colaborador!: Colaborador;
   listaApontamentosAtual: Apontamento[] = [];
   data!: any;
