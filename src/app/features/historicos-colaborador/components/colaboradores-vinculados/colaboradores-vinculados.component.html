@@ -5,60 +5,46 @@
   </ng-template>
 
   <ng-template pTemplate="content">
+    bbbbbbbbbb
     <p-table
-      [value]="projetoSelecionado.colaboradores"
-      dataKey="id"
-      styleClass="p-datatable-lg"
-      [scrollable]="true"
+      [value]="retornaListaColaboradoresTabela() || []"
       scrollHeight="4000px"
     >
       <ng-template pTemplate="header">
-        <tr>
-          <th style="width: 17%">Projeto</th>
-          <th style="width: 17%">Quantidade de Horas</th>
-          <th style="width: 17%">Excluir</th>
-          <th style="width: 17%">Projeto</th>
-          <th style="width: 17%">Quantidade de Horas</th>
-          <th style="width: 17%">Excluir</th>
-        </tr>
+        <tr></tr>
       </ng-template>
-      <ng-template
-        pTemplate="body"
-        let-colaborador
-        let-index="rowIndex"
-        let-editing="editing"
-      >
+      <ng-template pTemplate="body" let-colaborador>
         <tr>
           <td>
             <ng-template pTemplate="output">
-              {{ colaborador.NMatricula }} - planejado
+              {{ colaborador.incluido ? "Não Planejado" : "Planejado" }}
             </ng-template>
           </td>
           <td>
             <ng-template pTemplate="output">
-              {{ colaborador.ANome }} - planejado
+              {{ colaborador.NMatricula + " - " + colaborador.ANome }}
             </ng-template>
           </td>
           <td>
             <ng-template pTemplate="output">
-              {{ colaborador.NHorasTotais }} - planejado
+              {{ colaborador.NHorasTotais }}
             </ng-template>
           </td>
           <td>
             <ng-template pTemplate="output">
-              {{ colaborador.NHorasApontadas }} - planejado
+              {{ colaborador.NHorasApontadas }}
             </ng-template>
           </td>
           <td>
             <ng-template pTemplate="output">
-              {{ colaborador.NDesvio }} - planejado
+              {{ colaborador.NDesvio }}
             </ng-template>
           </td>
           <td *ngIf="colaborador?.incluido">
             <p-button
               severity="danger"
               label="Excluir"
-              (click)="botaoExcluir(index)"
+              (click)="botaoExcluir(colaborador)"
               [disabled]="desabilitar"
             />
           </td>

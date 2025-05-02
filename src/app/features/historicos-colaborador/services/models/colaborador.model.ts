@@ -13,5 +13,9 @@ export interface Colaborador {
 }
 
 export interface RetornoColaborador {
-  outputData: Colaborador;
+  outputData: {
+    colaboradores: Colaborador;
+    ARetorno: string;
+    message: string;
+  };
 }

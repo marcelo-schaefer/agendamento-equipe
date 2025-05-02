@@ -47,4 +47,8 @@ export class DadosProjetoComponent implements OnInit {
   constructor() {}
 
   ngOnInit() {}
+
+  preencheListaProejtos(projetos: Projeto[]): void {
+    this.listaProjetos = projetos;
+  }
 }

@@ -6,6 +6,7 @@ import { environment } from '../../../../environments/environment';
 import { Colaborador, RetornoColaborador } from './models/colaborador.model';
 import { RetornoGravacao } from './models/retorno-gravacao';
 import { Persistencia } from './models/persistencia';
+import { RetornoProjeto } from './models/projeto.model';
 
 @Injectable({
   providedIn: 'root',
@@ -17,8 +18,8 @@ export class InformacoesColaboradorService {
       encryption: '3',
       server: 'https://ocweb03s1p.seniorcloud.com.br:31061/',
       module: 'rubi',
-      service: 'com.senior.g5.rh.fp.apontamentoHora',
-      port: 'dadosSolicitante',
+      service: 'com.senior.g5.rh.fp.EPO',
+      port: '',
       user: '',
       password: '',
       rootObject: '',
@@ -27,12 +28,34 @@ export class InformacoesColaboradorService {
 
   private http = inject(HttpClient);
 
-  public obterInformacoesColaborador(
-  ): Observable<RetornoColaborador> {
+  public obterInformacoesColaborador(): Observable<RetornoColaborador> {
     return this.http.post<RetornoColaborador>(environment.plugin.invoke, {
       ...this.basePayload,
       inputData: {
         ...this.basePayload.inputData,
+      },
+    });
+  }
+
+  public obterListaProjetos(): Observable<RetornoProjeto> {
+    return this.http.post<RetornoProjeto>(environment.plugin.invoke, {
+      ...this.basePayload,
+      inputData: {
+        ...this.basePayload.inputData,
+        port: 'buscaProjetos',
+      },
+    });
+  }
+
+  public obterListaColaboradores(): Observable<RetornoColaborador> {
+    return this.http.post<RetornoColaborador>(environment.plugin.invoke, {
+      ...this.basePayload,
+      inputData: {
+        ...this.basePayload.inputData,
+        port: 'buscaColaboradores',
+        nTop: 'buscaColaboradores',
+        nSkip: 'nSkip',
+        aUsuarioSolicitante: 'nSkip',
       },
     });
   }
@@ -43,7 +66,7 @@ export class InformacoesColaboradorService {
       inputData: {
         ...this.basePayload.inputData,
         ...body,
-        port: 'persisitencia'
+        port: 'persisiteEPO',
       },
     });
   }

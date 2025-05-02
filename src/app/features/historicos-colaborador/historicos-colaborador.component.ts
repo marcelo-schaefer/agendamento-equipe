@@ -1,15 +1,13 @@
 import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
-import { finalize, lastValueFrom } from 'rxjs';
+import { finalize, firstValueFrom, lastValueFrom } from 'rxjs';
 
 import { CalendarModule } from 'primeng/calendar';
 
 import { InformacoesColaboradorService } from './services/informacoes-colaborador.service';
 import { Colaborador } from './services/models/colaborador.model';
 
-import { InformacoesColaboradorComponent } from './components/informacoes-colaborador/informacoes-colaborador.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { FormsModule } from '@angular/forms';
-import { ApontamentoHorasComponent } from './components/apontamento-horas/apontamento-horas.component';
 import { ToastModule } from 'primeng/toast';
 import { RippleModule } from 'primeng/ripple';
 import { MessageService } from 'primeng/api';
@@ -17,15 +15,14 @@ import { Apontamento } from './services/models/apontamento';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DadosProjetoComponent } from './components/dados-projeto/dados-projeto.component';
 import { ColaboradoresVinculadosComponent } from './components/colaboradores-vinculados/colaboradores-vinculados.component';
+import { Projeto } from './services/models/projeto.model';
 
 @Component({
   selector: 'app-historicos-colaborador',
   standalone: true,
   imports: [
     FormsModule,
-    InformacoesColaboradorComponent,
     DadosProjetoComponent,
-    ApontamentoHorasComponent,
     ColaboradoresVinculadosComponent,
     LoadingComponent,
     CalendarModule,
@@ -46,16 +43,12 @@ export class HistoricosColaboradorComponent implements OnInit {
     | ColaboradoresVinculadosComponent
     | undefined;
 
-  @ViewChild(ApontamentoHorasComponent, { static: true })
-  apontamentoHorasComponent: ApontamentoHorasComponent | undefined;
-
   private informacoesColaboradorService = inject(InformacoesColaboradorService);
 
   protected informacoesColaborador = signal<Colaborador | undefined>(undefined);
   carregandoInformacoes = signal(false);
 
-  public dataTeste = signal<Date | null>(null);
-  solicitante!: Colaborador;
+  listaProejtos!: Projeto[];
 
   constructor(private messageService: MessageService) {}
 
@@ -65,13 +58,30 @@ export class HistoricosColaboradorComponent implements OnInit {
 
   async inicializaComponente(): Promise<void> {
     this.carregandoInformacoes.set(true);
-    this.tratarDadosSolicitante();
-    this.informacoesColaborador.set(this.solicitante);
-    this.apontamentoHorasComponent?.preencherColaborador(this.solicitante);
+    await this.buscaProjetos();
+    this.dadosProjetoComponent.preencheListaProejtos(this.listaProejtos);
     this.carregandoInformacoes.set(false);
   }
 
-  tratarDadosSolicitante(): void {}
+  async buscaProjetos(): Promise<void> {
+    try {
+      const projetos = await firstValueFrom(
+        this.informacoesColaboradorService.obterListaProjetos()
+      );
+      if (projetos.outputData.message || projetos.outputData.ARetorno != 'OK') {
+        this.notificarErro(
+          'Erro ao buscar a lista de projetos, ' +
+            (projetos.outputData.message || projetos.outputData.ARetorno)
+        );
+      } else this.listaProejtos = projetos.outputData.projetos;
+    } catch (error) {
+      console.error(error);
+      this.notificarErro(
+        'Erro ao buscar a lista de projetos, tente mais tarde ou contate o admnistrador. ' +
+          error
+      );
+    }
+  }
 
   notificarErro(mensagem: string) {
     this.messageService.add({
@@ -90,9 +100,7 @@ export class HistoricosColaboradorComponent implements OnInit {
 
   async enviarSolicitacao(): Promise<void> {
     this.carregandoInformacoes.set(true);
-    this.apontamentoHorasComponent?.desabilitarForm(true);
     await this.gravarEnvio();
-    this.apontamentoHorasComponent?.desabilitarForm(false);
   }
 
   async gravarEnvio(): Promise<void> {
@@ -173,71 +181,4 @@ export class HistoricosColaboradorComponent implements OnInit {
 
   //   return apontamentos;
   // }
-
-  criarColaborador(): Colaborador {
-    return {
-      NCodigoEmpresa: '12345',
-      ANomeEmpresa: 'Empresa Exemplo LTDA',
-      NTipoColaborador: '1',
-      ADescricaoTipoColaborador: 'Empregado',
-      NMatricula: '123456',
-      ANome: 'João da Silva',
-      ARetorno: 'Sucesso',
-      datasApontamento: [
-        {
-          DData: '20/12/2024',
-          AAfastado: 'N',
-          ABatidasPonto: '08:00 - 12:00, 13:00 - 17:00',
-          NQuantidadeHorasPrevistas: '480',
-          NQuantidadeBatidas: '4',
-          apontamentos: [
-            {
-              NCodigoProjeto: '1',
-              NQuantidade: '360',
-            },
-            {
-              NCodigoProjeto: '2',
-              NQuantidade: '60',
-            },
-          ],
-        },
-        {
-          DData: '19/12/2024',
-          AAfastado: 'S',
-          ABatidasPonto: 'Não Apontado',
-          NQuantidadeHorasPrevistas: '480',
-          apontamentos: [],
-        },
-        {
-          DData: '18/12/2024',
-          AAfastado: 'N',
-          ABatidasPonto: '07:00 - 12:12 - 13:30',
-          NQuantidadeHorasPrevistas: '480',
-          NQuantidadeBatidas: '3',
-          apontamentos: [
-            {
-              NCodigoProjeto: '1',
-              NQuantidade: '60',
-            },
-            {
-              NCodigoProjeto: '2',
-              NQuantidade: '120',
-            },
-          ],
-        },
-      ],
-      projetos: [
-        {
-          NCodigoProjeto: '1',
-          ADescricaoProjeto: 'Desenvolvimento de Sistema',
-          nQuantidade: '10',
-        },
-        {
-          NCodigoProjeto: '2',
-          ADescricaoProjeto: 'Suporte Técnico',
-          nQuantidade: '8',
-        },
-      ],
-    } as unknown as Colaborador;
-  }
 }

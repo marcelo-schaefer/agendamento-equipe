@@ -10,9 +10,10 @@
         <p-dropdown
           [options]="listaProjetos || []"
           optionLabel="ANome"
-          placeholder="Selecione uma data"
+          placeholder="Selecione um projeto"
           [disabled]="desabilitar"
           [emptyMessage]="'Nenhum item disponível'"
+          [(ngModel)]="projetoSelecionado"
         ></p-dropdown>
       </div>
     </div>

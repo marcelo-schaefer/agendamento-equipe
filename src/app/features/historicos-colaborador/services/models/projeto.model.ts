@@ -13,5 +13,6 @@ export interface RetornoProjeto {
   outputData: {
     projetos: Projeto[];
     ARetorno: string;
+    message: string;
   };
 }
