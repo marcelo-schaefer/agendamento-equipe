@@ -1,4 +1,11 @@
-import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  inject,
+  OnInit,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { finalize, firstValueFrom, lastValueFrom } from 'rxjs';
 
 import { CalendarModule } from 'primeng/calendar';
@@ -16,6 +23,11 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DadosProjetoComponent } from './components/dados-projeto/dados-projeto.component';
 import { ColaboradoresVinculadosComponent } from './components/colaboradores-vinculados/colaboradores-vinculados.component';
 import { Projeto } from './services/models/projeto.model';
+import { BuscaColaboradoresComponent } from './components/busca-colaboradores/busca-colaboradores.component';
+import {
+  ColaboradoresPersistencia,
+  Persistencia,
+} from './services/models/persistencia';
 
 @Component({
   selector: 'app-historicos-colaborador',
@@ -24,6 +36,7 @@ import { Projeto } from './services/models/projeto.model';
     FormsModule,
     DadosProjetoComponent,
     ColaboradoresVinculadosComponent,
+    BuscaColaboradoresComponent,
     LoadingComponent,
     CalendarModule,
     ToastModule,
@@ -34,7 +47,7 @@ import { Projeto } from './services/models/projeto.model';
   templateUrl: './historicos-colaborador.component.html',
   styleUrl: './historicos-colaborador.component.css',
 })
-export class HistoricosColaboradorComponent implements OnInit {
+export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   @ViewChild(DadosProjetoComponent, { static: true })
   dadosProjetoComponent: DadosProjetoComponent | undefined;
 
@@ -49,18 +62,48 @@ export class HistoricosColaboradorComponent implements OnInit {
   carregandoInformacoes = signal(false);
 
   listaProejtos!: Projeto[];
+  projetoSelecionado!: Projeto;
 
   constructor(private messageService: MessageService) {}
 
-  async ngOnInit(): Promise<void> {
-    await this.inicializaComponente();
+  ngOnInit(): void {
+    this.carregandoInformacoes.set(true);
+    this.inicializaComponente();
   }
 
-  async inicializaComponente(): Promise<void> {
-    this.carregandoInformacoes.set(true);
-    await this.buscaProjetos();
-    this.dadosProjetoComponent.preencheListaProejtos(this.listaProejtos);
+  async ngAfterViewInit(): Promise<void> {
+    await this.inicializarBuscaProjetos();
     this.carregandoInformacoes.set(false);
+  }
+
+  inicializaComponente(): void {
+    this.dadosProjetoComponent.limparFormulario();
+    this.colaboradoresVinculadosComponent.limparFormulario();
+  }
+
+  async inicializarBuscaProjetos(): Promise<void> {
+    await this.buscaProjetos();
+    this.tratarProjetos();
+    this.dadosProjetoComponent.preencheListaProejtos(this.listaProejtos);
+  }
+
+  async reinicializarComponente(): Promise<void> {
+    this.inicializaComponente();
+    await this.inicializarBuscaProjetos();
+  }
+
+  tratarProjetos(): void {
+    if (!Array.isArray(this.listaProejtos))
+      this.listaProejtos = [this.listaProejtos];
+
+    this.listaProejtos.forEach((proejto) => {
+      if (proejto.colaboradores) {
+        if (!Array.isArray(proejto.colaboradores))
+          proejto.colaboradores = [proejto.colaboradores];
+      } else {
+        proejto.colaboradores = [];
+      }
+    });
   }
 
   async buscaProjetos(): Promise<void> {
@@ -80,7 +123,26 @@ export class HistoricosColaboradorComponent implements OnInit {
         'Erro ao buscar a lista de projetos, tente mais tarde ou contate o admnistrador. ' +
           error
       );
+      this.carregandoInformacoes.set(false);
     }
+  }
+
+  validarAdicaoColaborador(colaborador: Colaborador): void {
+    if (
+      this.colaboradoresVinculadosComponent
+        .retornaListaColaboradoresTabela()
+        .filter((f) => f.NMatricula == colaborador.NMatricula).length > 0
+    )
+      this.dadosProjetoComponent.apresentarErroColaboradorDuplicado(true);
+    else
+      this.colaboradoresVinculadosComponent.adicionarColaborador(colaborador);
+  }
+
+  receberProjetoSelecionado(projeto: Projeto): void {
+    this.projetoSelecionado = projeto;
+    this.colaboradoresVinculadosComponent.preencherProjetoSelecionado(
+      this.projetoSelecionado
+    );
   }
 
   notificarErro(mensagem: string) {
@@ -88,6 +150,7 @@ export class HistoricosColaboradorComponent implements OnInit {
       severity: 'error',
       summary: 'Erro',
       detail: mensagem,
+      life: 5000,
     });
   }
   notificarSucesso(mensagem: string) {
@@ -95,59 +158,64 @@ export class HistoricosColaboradorComponent implements OnInit {
       severity: 'success',
       summary: 'Erro',
       detail: mensagem,
+      life: 5000,
     });
   }
 
   async enviarSolicitacao(): Promise<void> {
+    this.desabilitarFormulario(true);
     this.carregandoInformacoes.set(true);
     await this.gravarEnvio();
+    this.carregandoInformacoes.set(false);
+    this.desabilitarFormulario(false);
+  }
+
+  desabilitarFormulario(desabilitar: boolean): void {
+    this.dadosProjetoComponent.desabilitarFormulario(desabilitar);
+    this.colaboradoresVinculadosComponent.desabilitarFormulario(desabilitar);
   }
 
   async gravarEnvio(): Promise<void> {
-    // await lastValueFrom(
-    //   this.informacoesColaboradorService.gravarEnvio(this.montaCorpoEnvio())
-    // ).then(
-    //   (data) => {
-    //     if (data.outputData.message || data.outputData.ARetorno != 'OK') {
-    //       this.notificarErro(
-    //         'Erro ao gravar os apontramentos, ' +
-    //           (data.outputData?.message || data.outputData?.ARetorno)
-    //       );
-    //       this.carregandoInformacoes.set(false);
-    //     } else {
-    //       this.notificarSucesso('Gravado com sucesso!');
-    //       this.inicializaComponente();
-    //     }
-    //   },
-    //   () => {
-    //     this.notificarErro(
-    //       'Erro ao gravar os apontramentos, tente mais tarde ou contate o administrador'
-    //     );
-    //     this.carregandoInformacoes.set(false);
-    //   }
-    // );
+    await lastValueFrom(
+      this.informacoesColaboradorService.gravarEnvio(this.montaCorpoEnvio())
+    ).then(
+      (data) => {
+        if (data.outputData.message || data.outputData.ARetorno != 'OK') {
+          this.notificarErro(
+            'Erro ao gravar os colaboradores no projeto, ' +
+              (data.outputData?.message || data.outputData?.ARetorno)
+          );
+          this.carregandoInformacoes.set(false);
+        } else {
+          this.notificarSucesso('Gravado com sucesso!');
+          this.reinicializarComponente();
+        }
+      },
+      () => {
+        this.notificarErro(
+          'Erro ao gravar os apontramentos, tente mais tarde ou contate o administrador'
+        );
+        this.carregandoInformacoes.set(false);
+      }
+    );
   }
 
-  // montaCorpoEnvio(): Persistencia {
-  //   return {
-  //     nEmpresa: Number(this.solicitante.NCodigoEmpresa),x
-  //     nTipoColaborador: Number(this.solicitante.NTipoColaborador),
-  //     nMatricula: Number(this.solicitante.NMatricula),
-  //     dData: this.apontamentoHorasComponent?.data.DData,
-  //     apontamentos: this.apontamentoHorasComponent?.listaApontamentosAtual
-  //       .filter((f) => f.incluido || f.excluido)
-  //       .map((apontamento) => {
-  //         return {
-  //           nCodigoProjeto: Number(apontamento.NCodigoProjeto),
-  //           nQuantidade: Number(apontamento.NQuantidade),
-  //           aTipo: apontamento.excluido ? 'E' : 'I',
-  //         } as ApontamentosPersistencia;
-  //       })
-  //       .concat(
-  //         this.retornaApontamentosAlterados()
-  //       ) as ApontamentosPersistencia[],
-  //   };
-  // }
+  montaCorpoEnvio(): Persistencia {
+    return {
+      colaboradores:
+        this.colaboradoresVinculadosComponent.colaboradoresAdicionados.map(
+          (colab) => {
+            return {
+              nEmpresa: Number(colab.NEmpresa),
+              nTipoColaborador: Number(colab.NTipoColaborador),
+              nMatricula: Number(colab.NMatricula),
+              nTotalHoras: Number(colab.NHorasTotais),
+              nCodigoProjeto: Number(colab.nIdProjetoVinculado),
+            } as ColaboradoresPersistencia;
+          }
+        ),
+    };
+  }
 
   // retornaApontamentosAlterados(): ApontamentosPersistencia[] {
   //   let apontamentos: ApontamentosPersistencia[] = [];

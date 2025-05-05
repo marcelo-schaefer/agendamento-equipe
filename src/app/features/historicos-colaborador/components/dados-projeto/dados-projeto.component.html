@@ -3,73 +3,98 @@
     <h2>Informações do Projeto</h2>
   </ng-template>
 
-  <ng-template pTemplate="content">
-    <div class="grid">
-      <div class="col-3">
-        <h5 class="text-xs text-gray-500">Projeto:</h5>
-        <p-dropdown
-          [options]="listaProjetos || []"
-          optionLabel="ANome"
-          placeholder="Selecione um projeto"
-          [disabled]="desabilitar"
-          [emptyMessage]="'Nenhum item disponível'"
-          [(ngModel)]="projetoSelecionado"
-        ></p-dropdown>
-      </div>
+  <div class="grid">
+    <div class="col-12 md:col-4">
+      <h4>Projeto:</h4>
+      <p-dropdown
+        [style]="{ width: '100%' }"
+        [options]="listaProjetos || []"
+        optionLabel="ANome"
+        placeholder="Selecione um projeto"
+        [disabled]="desabilitar"
+        [emptyMessage]="'Nenhum item disponível'"
+        (onChange)="selecionarProjeto($event)"
+        [(ngModel)]="projetoSelecionado"
+      ></p-dropdown>
     </div>
-    <br />
+  </div>
+  <br />
 
-    <div class="grid">
-      <div class="col-2">
-        <small class="text-xs text-gray-500">Vigência do Projeto: </small>
-      </div>
-      <div class="col-1">
-        <p class="mb-0 mt-1 text-base">
-          {{ projetoSelecionado.DDataInicio || "" }}
-        </p>
-      </div>
-
-      <div class="col-2">
-        <small class="text-xs text-gray-500">Até: </small>
-      </div>
-
-      <div class="col-1">
-        <p class="mb-0 mt-1 text-base">
-          {{ projetoSelecionado.DDataFim || "" }}
-        </p>
-      </div>
+  <div class="grid gap-3">
+    <div class="col-12 md:col-5 flex align-items-center gap-2">
+      <h4 class="mb-0 text-nowrap">Vigência do Projeto:</h4>
+      <p class="mb-0">
+        {{
+          projetoSelecionado
+            ? projetoSelecionado.DDataInicio || "Indeterminado"
+            : ""
+        }}
+      </p>
     </div>
 
-    <div class="grid">
-      <div class="col-2">
-        <small class="text-xs text-gray-500">Status do Projeto: </small>
-      </div>
-      <div class="col-1">
-        <p class="mb-0 mt-1 text-base">
-          {{ projetoSelecionado.AStatus || "" }}
-        </p>
-      </div>
+    <div class="col-12 md:col-3 flex align-items-center gap-2">
+      <h4 class="mb-0 text-nowrap">Até:</h4>
+      <p class="mb-0">
+        {{
+          projetoSelecionado
+            ? projetoSelecionado.DDataFim || "Indeterminado"
+            : ""
+        }}
+      </p>
+    </div>
+  </div>
+
+  <div class="grid gap-3 mt-3">
+    <div class="col-12 md:col-6 flex align-items-center gap-2">
+      <h4 class="mb-0 text-nowrap">Status do Projeto:</h4>
+      <p class="mb-0">
+        {{
+          projetoSelecionado
+            ? projetoSelecionado.AStatus || "Indeterminado"
+            : ""
+        }}
+      </p>
+    </div>
+  </div>
+
+  <br />
+  <br />
+
+  <div class="card">
+    <p-messages
+      [(value)]="messages"
+      [closable]="false"
+      *ngIf="apresentarErro"
+    />
+  </div>
+
+  <div class="grid align-items-end gap-3">
+    <div class="col-12 md:col-6">
+      <h4>Colaborador:</h4>
+      <app-busca-colaboradores
+        (colaboradorSelecionadoEmit)="selecionarColaborador($event)"
+      ></app-busca-colaboradores>
     </div>
 
-    <br />
-    <br />
-
-    <div class="grid">
-      <div class="col-3">
-        <h5 class="text-xs text-gray-500">Colaborador:</h5>
-        <p-dropdown
-          [options]="listaProjetos || []"
-          optionLabel="ANome"
-          placeholder="Selecione uma data"
-          [disabled]="desabilitar"
-          [emptyMessage]="'Nenhum item disponível'"
-        ></p-dropdown>
-      </div>
-
-      <div class="col-3">
-        <h5 class="text-xs text-gray-500">Horas totais para o projeto:</h5>
-        <p-inputNumber inputId="integeronly" [(ngModel)]="horasProjeto" />
-      </div>
+    <div class="col-6 md:col-3 p-fluid">
+      <h4>Horas totais para o projeto:</h4>
+      <p-inputNumber
+        inputId="integeronly"
+        [disabled]="desabilitar"
+        [(ngModel)]="horasProjeto"
+        [min]="1"
+      ></p-inputNumber>
     </div>
-  </ng-template>
+
+    <div class="col-4 md:col-2">
+      <button
+        pButton
+        pRipple
+        label="Adicionar"
+        class="w-full md:w-auto"
+        (click)="adicionarColaboradorAoProjeto()"
+        [disabled]="validarHabilitarBotaoAdicionar()"
+      ></button>
+    </div>
+  </div>
 </p-card>

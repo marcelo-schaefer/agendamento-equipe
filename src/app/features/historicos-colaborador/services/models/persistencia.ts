@@ -8,6 +8,6 @@ export interface ColaboradoresPersistencia extends Colaborador {
   nEmpresa: number;
   nTipoColaborador: number;
   nMatricula: number;
-  nHorasTotais: number;
+  nTotalHoras: number;
   nCodigoProjeto: number;
 }

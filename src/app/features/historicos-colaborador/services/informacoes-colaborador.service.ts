@@ -7,6 +7,7 @@ import { Colaborador, RetornoColaborador } from './models/colaborador.model';
 import { RetornoGravacao } from './models/retorno-gravacao';
 import { Persistencia } from './models/persistencia';
 import { RetornoProjeto } from './models/projeto.model';
+import { CorpoBusca } from './models/corpo-busca';
 
 @Injectable({
   providedIn: 'root',
@@ -47,15 +48,15 @@ export class InformacoesColaboradorService {
     });
   }
 
-  public obterListaColaboradores(): Observable<RetornoColaborador> {
+  public obterListaColaboradores(
+    body: CorpoBusca
+  ): Observable<RetornoColaborador> {
     return this.http.post<RetornoColaborador>(environment.plugin.invoke, {
       ...this.basePayload,
       inputData: {
         ...this.basePayload.inputData,
         port: 'buscaColaboradores',
-        nTop: 'buscaColaboradores',
-        nSkip: 'nSkip',
-        aUsuarioSolicitante: 'nSkip',
+        ...body,
       },
     });
   }

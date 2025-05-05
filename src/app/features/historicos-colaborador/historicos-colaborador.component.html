@@ -1,8 +1,11 @@
 <app-loading [loading]="carregandoInformacoes()">
   <p-toast />
-  <app-dados-projeto></app-dados-projeto>
-  <!-- <app-apontamento-horas
+
+  <app-dados-projeto
+    (projetoSelecionadoEmit)="receberProjetoSelecionado($event)"
+    (colaboradorAdicionado)="validarAdicaoColaborador($event)"
+  ></app-dados-projeto>
+  <app-colaboradores-vinculados
     (enviarSolicitacao)="enviarSolicitacao()"
-  ></app-apontamento-horas> -->
-  <app-colaboradores-vinculados></app-colaboradores-vinculados>
+  ></app-colaboradores-vinculados>
 </app-loading>

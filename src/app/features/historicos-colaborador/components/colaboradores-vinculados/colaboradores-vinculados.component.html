@@ -5,48 +5,42 @@
   </ng-template>
 
   <ng-template pTemplate="content">
-    bbbbbbbbbb
     <p-table
       [value]="retornaListaColaboradoresTabela() || []"
-      scrollHeight="4000px"
+      [tableStyle]="{ 'min-width': '50rem' }"
     >
       <ng-template pTemplate="header">
-        <tr></tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-colaborador>
         <tr>
-          <td>
-            <ng-template pTemplate="output">
-              {{ colaborador.incluido ? "Não Planejado" : "Planejado" }}
-            </ng-template>
-          </td>
-          <td>
-            <ng-template pTemplate="output">
-              {{ colaborador.NMatricula + " - " + colaborador.ANome }}
-            </ng-template>
-          </td>
-          <td>
-            <ng-template pTemplate="output">
-              {{ colaborador.NHorasTotais }}
-            </ng-template>
-          </td>
-          <td>
-            <ng-template pTemplate="output">
-              {{ colaborador.NHorasApontadas }}
-            </ng-template>
-          </td>
-          <td>
-            <ng-template pTemplate="output">
-              {{ colaborador.NDesvio }}
-            </ng-template>
-          </td>
-          <td *ngIf="colaborador?.incluido">
+          <th>Origem</th>
+          <th>Colaborador</th>
+          <th>Horas Planejadas Totais</th>
+          <th>Horas Apontadas até o Período</th>
+          <th>Desvio</th>
+          <th>Excluir</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-product>
+        <tr>
+          <td>{{ product.incluido ? "Não Planejado" : "Planejado" }}</td>
+          <td>{{ product.NMatricula + " - " + product.ANome }}</td>
+          <td>{{ product.NHorasTotais }}</td>
+          <td>{{ product.NHorasApontadas }}</td>
+          <td>{{ product.NDesvio }}</td>
+          <td *ngIf="product?.incluido">
             <p-button
               severity="danger"
-              label="Excluir"
-              (click)="botaoExcluir(colaborador)"
+              (click)="botaoExcluir(product)"
               [disabled]="desabilitar"
-            />
+              ><i class="pi pi-trash"></i
+            ></p-button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" style="text-align: center; font-weight: bold">
+            Não existem colaboradores associados.
           </td>
         </tr>
       </ng-template>

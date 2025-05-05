@@ -1,0 +1,53 @@
+<form [formGroup]="formDadosSolicitacao">
+  <!-- <nz-form-item>
+    <nz-form-control nzErrorTip="Selecione um Colaborador">
+      <nz-select
+        formControlName="colaboradorSelecionado"
+        id="matricula"
+        nzAutoFocus
+        nzShowSearch
+        nzServerSearch
+        (nzOnSearch)="onSearch($event)"
+        [nzLoading]="isLoadingColaboradores"
+        [nzDropdownRender]="renderTemplate"
+        (nzScrollToBottom)="onScrollToBottom()"
+        (ngModelChange)="selecionaColaborador($event)"
+        nzPlaceHolder="Selecione o colaborador"
+        [compareWith]="compareColaborador"
+        #matricula
+      >
+        <nz-option
+          *ngFor="let o of colaboradores"
+          [nzValue]="o"
+          [nzLabel]="o.matricula + ' - ' + o.nomeCompleto"
+        ></nz-option>
+      </nz-select>
+      <ng-template #renderTemplate>
+        <nz-spin *ngIf="isLoadingColaboradores"></nz-spin>
+      </ng-template>
+    </nz-form-control>
+  </nz-form-item> -->
+  <p-dropdown
+    [options]="colaboradores || []"
+    [style]="{ width: '100%' }"
+    formControlName="colaboradorSelecionado"
+    placeholder="Selecione um Colaborador "
+    [emptyMessage]="'Nenhum colaborador disponível'"
+    [editable]="true"
+    (ngModelChange)="onSearch($event)"
+    (onChange)="selecionaColaborador($event)"
+    (onScrollToBottom)="onScrollToBottom()"
+    [loading]="isLoadingColaboradores || inicializando"
+    [virtualScroll]="true"
+    [virtualScrollItemSize]="30"
+    optionLabel="ANome"
+    [disabled]="desabilitar"
+    [panelStyle]="{ 'max-height': '200px' }"
+  >
+    <ng-template pTemplate="item" let-colaboradorItem>
+      <div>
+        {{ colaboradorItem?.NMatricula + " - " + colaboradorItem?.ANome }}
+      </div>
+    </ng-template></p-dropdown
+  >
+</form>

@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, input, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import {
   FormsModule,
   ReactiveFormsModule,
@@ -42,9 +49,8 @@ import { Projeto } from '../../services/models/projeto.model';
     ToastModule,
     RippleModule,
   ],
-  providers: [MessageService],
 })
-export class ColaboradoresVinculadosComponent {
+export class ColaboradoresVinculadosComponent implements OnInit {
   @Output()
   enviarSolicitacao: EventEmitter<boolean> = new EventEmitter<boolean>();
 
@@ -53,10 +59,11 @@ export class ColaboradoresVinculadosComponent {
   colaboradoresAdicionados!: Colaborador[];
   desabilitar = false;
 
-  constructor(
-    private fb: FormBuilder,
-    private messageService: MessageService
-  ) {}
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
+    this.limparFormulario();
+  }
 
   enviar(): void {
     if (this.validarEnvio()) this.enviarSolicitacao.emit(true);
@@ -66,12 +73,9 @@ export class ColaboradoresVinculadosComponent {
     return true;
   }
 
-  notificar(mensagem: string) {
-    this.messageService.add({
-      severity: 'error',
-      summary: 'Erro',
-      detail: mensagem,
-    });
+  preencherProjetoSelecionado(projeto: Projeto): void {
+    this.projetoSelecionado = projeto;
+    this.cdr.detectChanges();
   }
 
   limparFormulario(): void {
@@ -79,12 +83,18 @@ export class ColaboradoresVinculadosComponent {
     this.colaboradoresAdicionados = [];
   }
 
+  adicionarColaborador(colaborador: Colaborador): void {
+    this.colaboradoresAdicionados.push(colaborador);
+  }
+
   retornaListaColaboradoresTabela(): Colaborador[] {
-    return this.projetoSelecionado
-      ? this.projetoSelecionado.colaboradores.concat(
-          this.colaboradoresAdicionados
-        )
-      : this.colaboradoresAdicionados;
+    return (
+      (this.projetoSelecionado && this.projetoSelecionado.colaboradores
+        ? this.projetoSelecionado.colaboradores.concat(
+            this.colaboradoresAdicionados
+          )
+        : this.colaboradoresAdicionados) || []
+    );
   }
 
   botaoExcluir(colaborador: Colaborador): void {
@@ -100,7 +110,7 @@ export class ColaboradoresVinculadosComponent {
     );
   }
 
-  desabilitarForm(habilitar: boolean): void {
-    this.desabilitar = habilitar;
+  desabilitarFormulario(desabilitar: boolean): void {
+    this.desabilitar = desabilitar;
   }
 }

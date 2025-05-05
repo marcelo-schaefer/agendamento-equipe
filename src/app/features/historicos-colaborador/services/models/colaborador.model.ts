@@ -9,13 +9,18 @@ export interface Colaborador {
   NHorasTotais: string;
   NHorasApontadas: string;
   NDesvio: string;
+  nIdProjetoVinculado?: string;
   incluido?: boolean;
 }
 
-export interface RetornoColaborador {
+export class RetornoColaborador {
   outputData: {
-    colaboradores: Colaborador;
-    ARetorno: string;
-    message: string;
+    colaboradores: Colaborador[];
+    ARetorno?: string;
+    message?: string;
   };
+
+  constructor() {
+    this.outputData = { colaboradores: [] };
+  }
 }
