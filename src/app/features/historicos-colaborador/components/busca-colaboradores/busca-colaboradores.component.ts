@@ -68,7 +68,7 @@ export class BuscaColaboradoresComponent implements OnInit {
   isEndColaboradores = false;
   colaboradoresDesabilitados = false;
   search = '';
-  top = 10;
+  top = 100;
   skip = 0;
   colaborador: Colaborador;
   colaboradorSelecionado: Colaborador;
@@ -144,7 +144,7 @@ export class BuscaColaboradoresComponent implements OnInit {
 
   cleanSelect(): void {
     this.colaboradores = [];
-    this.top = 10;
+    this.top = 100;
     this.skip = 0;
     this.isEndColaboradores = false;
   }

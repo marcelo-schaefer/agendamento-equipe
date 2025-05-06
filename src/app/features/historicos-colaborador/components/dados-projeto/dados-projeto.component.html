@@ -22,38 +22,39 @@
 
   <div class="grid gap-3">
     <div class="col-12 md:col-5 flex align-items-center gap-2">
-      <h4 class="mb-0 text-nowrap">Vigência do Projeto:</h4>
-      <p class="mb-0">
+      <span class="font-bold text-base text-nowrap">Vigência do Projeto:</span>
+      <span class="text-base">
         {{
           projetoSelecionado
             ? projetoSelecionado.DDataInicio || "Indeterminado"
             : ""
         }}
-      </p>
+      </span>
     </div>
 
     <div class="col-12 md:col-3 flex align-items-center gap-2">
-      <h4 class="mb-0 text-nowrap">Até:</h4>
-      <p class="mb-0">
+      <span class="font-bold text-base text-nowrap">Até:</span>
+      <span class="text-base">
         {{
           projetoSelecionado
             ? projetoSelecionado.DDataFim || "Indeterminado"
             : ""
         }}
-      </p>
+      </span>
     </div>
   </div>
+  <br />
 
-  <div class="grid gap-3 mt-3">
+  <div class="grid gap-3">
     <div class="col-12 md:col-6 flex align-items-center gap-2">
-      <h4 class="mb-0 text-nowrap">Status do Projeto:</h4>
-      <p class="mb-0">
+      <span class="font-bold text-base text-nowrap">Status do Projeto:</span>
+      <span class="text-base">
         {{
           projetoSelecionado
             ? projetoSelecionado.AStatus || "Indeterminado"
             : ""
         }}
-      </p>
+      </span>
     </div>
   </div>
 
