@@ -75,7 +75,14 @@ export class ColaboradoresVinculadosComponent implements OnInit {
 
   preencherProjetoSelecionado(projeto: Projeto): void {
     this.projetoSelecionado = projeto;
+    this.atualizarColaboradoresNoProjeto();
     this.cdr.detectChanges();
+  }
+
+  atualizarColaboradoresNoProjeto(): void {
+    this.colaboradoresAdicionados.forEach((colaborador) => {
+      colaborador.nIdProjetoVinculado = this.projetoSelecionado.NId;
+    });
   }
 
   limparFormulario(): void {

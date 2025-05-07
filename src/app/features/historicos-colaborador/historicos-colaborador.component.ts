@@ -150,7 +150,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
       severity: 'error',
       summary: 'Erro',
       detail: mensagem,
-      life: 5000,
+      life: 10000,
     });
   }
   notificarSucesso(mensagem: string) {
@@ -158,7 +158,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
       severity: 'success',
       summary: 'Erro',
       detail: mensagem,
-      life: 5000,
+      life: 10000,
     });
   }
 
