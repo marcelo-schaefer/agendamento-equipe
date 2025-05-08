@@ -131,7 +131,11 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     if (
       this.colaboradoresVinculadosComponent
         .retornaListaColaboradoresTabela()
-        .filter((f) => f.NMatricula == colaborador.NMatricula).length > 0
+        .filter(
+          (f) =>
+            f.NMatricula == colaborador.NMatricula &&
+            colaborador.AOrigem == 'Planejado'
+        ).length > 0
     )
       this.dadosProjetoComponent.apresentarErroColaboradorDuplicado(true);
     else
@@ -140,6 +144,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
 
   receberProjetoSelecionado(projeto: Projeto): void {
     this.projetoSelecionado = projeto;
+    this.colaboradoresVinculadosComponent.limparFormulario();
     this.colaboradoresVinculadosComponent.preencherProjetoSelecionado(
       this.projetoSelecionado
     );

@@ -118,10 +118,6 @@ export class DadosProjetoComponent implements OnInit {
     });
   }
 
-  teste(): void {
-    console.log('deu');
-  }
-
   opcoesIniciaisColaboradores(): void {
     this.buscaColaboradoresComponent.onScrollToBottom();
   }

@@ -1,3 +1,4 @@
+import { Colaborador } from './../../services/models/colaborador.model';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectorRef,
@@ -26,7 +27,6 @@ import { RippleModule } from 'primeng/ripple';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { Apontamento } from '../../services/models/apontamento';
-import { Colaborador } from '../../services/models/colaborador.model';
 import { Projeto } from '../../services/models/projeto.model';
 
 @Component({
@@ -91,15 +91,46 @@ export class ColaboradoresVinculadosComponent implements OnInit {
   }
 
   adicionarColaborador(colaborador: Colaborador): void {
+    const colaboradorNaoPlanejado = this.projetoSelecionado.colaboradores.find(
+      (f) => f.NMatricula == colaborador.NMatricula
+    );
+
+    if (colaboradorNaoPlanejado) {
+      colaborador.NHorasApontadas = colaboradorNaoPlanejado.NHorasApontadas;
+      colaborador.NDesvio = this.calculaDesvio(colaborador);
+    }
+
+    colaborador.AOrigem = 'Planejado';
     this.colaboradoresAdicionados.push(colaborador);
+  }
+
+  calculaDesvio(colaborador: Colaborador): string {
+    const horasTotais = colaborador?.NHorasTotais
+      ? Number(colaborador?.NHorasTotais) * 60
+      : 0;
+    const horasApontadas = this.converterParaMinutos(
+      colaborador?.NHorasApontadas
+    );
+
+    if (horasTotais < horasApontadas)
+      return (
+        '- ' + this.converterParaHoraFormatada(horasApontadas - horasTotais)
+      );
+    else return this.converterParaHoraFormatada(horasTotais - horasApontadas);
   }
 
   retornaListaColaboradoresTabela(): Colaborador[] {
     return (
       (this.projetoSelecionado && this.projetoSelecionado.colaboradores
-        ? this.projetoSelecionado.colaboradores.concat(
-            this.colaboradoresAdicionados
-          )
+        ? this.projetoSelecionado.colaboradores
+            .filter(
+              (f) =>
+                !this.colaboradoresAdicionados.some(
+                  (colabAdicionado) =>
+                    colabAdicionado.NMatricula == f.NMatricula
+                )
+            )
+            .concat(this.colaboradoresAdicionados)
         : this.colaboradoresAdicionados) || []
     );
   }
@@ -119,5 +150,26 @@ export class ColaboradoresVinculadosComponent implements OnInit {
 
   desabilitarFormulario(desabilitar: boolean): void {
     this.desabilitar = desabilitar;
+  }
+
+  converterParaMinutos(tempo: string): number {
+    if (tempo) {
+      const [horas, minutos] = tempo.split(':').map(Number);
+      return horas * 60 + minutos;
+    }
+    return 0;
+  }
+
+  converterParaHoraFormatada(minutosTotais: number): string {
+    if (minutosTotais) {
+      const horas = Math.floor(minutosTotais / 60);
+      const minutos = minutosTotais % 60;
+
+      const horasFormatadas = horas.toString().padStart(2, '0');
+      const minutosFormatados = minutos.toString().padStart(2, '0');
+
+      return `${horasFormatadas}:${minutosFormatados}`;
+    }
+    return '00:00';
   }
 }
