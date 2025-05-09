@@ -88,8 +88,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   }
 
   async reinicializarComponente(): Promise<void> {
-    this.inicializaComponente();
-    await this.inicializarBuscaProjetos();
+    window.location.reload();
   }
 
   tratarProjetos(): void {
