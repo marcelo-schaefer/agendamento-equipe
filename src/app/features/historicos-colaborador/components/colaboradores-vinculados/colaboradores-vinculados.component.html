@@ -19,18 +19,26 @@
           <th>Excluir</th>
         </tr>
       </ng-template>
-      <ng-template pTemplate="body" let-product>
+      <ng-template pTemplate="body" let-colaborador>
         <tr>
-          <td>{{ product.AOrigem }}</td>
-          <td>{{ product.NMatricula + " - " + product.ANome }}</td>
-          <td>{{ product.NHorasTotais }}</td>
-          <td>{{ product.NHorasApontadas }}</td>
-          <td>{{ product.NDesvio }}</td>
-          <td *ngIf="product?.incluido">
+          <td>{{ colaborador.AOrigem }}</td>
+          <td>{{ colaborador.NMatricula + " - " + colaborador.ANome }}</td>
+          <td>{{ colaborador.NHorasTotais }}</td>
+          <td>{{ colaborador.NHorasApontadas }}</td>
+          <td
+            [ngClass]="{
+              'texto-vermelho': verificaDesvioNegativo(colaborador.NDesvio)
+            }"
+          >
+            {{ colaborador.NDesvio != "0" ? colaborador.NDesvio : "00:00" }}
+          </td>
+          <td *ngIf="colaborador?.incluido">
             <p-button
               severity="danger"
-              (click)="botaoExcluir(product)"
-              [disabled]="desabilitar"
+              (click)="botaoExcluir(colaborador)"
+              [disabled]="
+                desabilitar || colaborador?.NHorasApontadas != '00:00'
+              "
               ><i class="pi pi-trash"></i
             ></p-button>
           </td>
@@ -45,6 +53,36 @@
         </tr>
       </ng-template>
     </p-table>
+
+    <p-card *ngIf="retornaListaColaboradoresTabela().length > 0">
+      <div class="grid gap-3">
+        <div class="col-12 md:col-3 flex align-items-center gap-2">
+          <span class="font-bold text-base text-nowrap">Horas Planejadas:</span>
+          <span class="text-base">
+            {{ calculaHorasPlanejadasTotais() || "00:00" }}
+          </span>
+        </div>
+
+        <div class="col-12 md:col-3 flex align-items-center gap-2">
+          <span class="font-bold text-base text-nowrap">Horas Apontadas:</span>
+          <span class="text-base">
+            {{ calculaHorasApontadasTotais() || "00:00" }}
+          </span>
+        </div>
+
+        <div class="col-12 md:col-3 flex align-items-center gap-2">
+          <span class="font-bold text-base text-nowrap">Desvio Total:</span>
+          <span
+            class="text-base"
+            [ngClass]="{
+              'texto-vermelho': verificaDesvioNegativo(calculaDesvioTotal())
+            }"
+          >
+            {{ calculaDesvioTotal() || "00:00" }}
+          </span>
+        </div>
+      </div>
+    </p-card>
 
     <br />
     <div class="col-12 flex flex-column align-items-end">

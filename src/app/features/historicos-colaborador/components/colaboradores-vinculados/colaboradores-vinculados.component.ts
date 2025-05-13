@@ -154,22 +154,63 @@ export class ColaboradoresVinculadosComponent implements OnInit {
 
   converterParaMinutos(tempo: string): number {
     if (tempo) {
-      const [horas, minutos] = tempo.split(':').map(Number);
-      return horas * 60 + minutos;
+      if (tempo.includes('-')) {
+        tempo = tempo.split('-')[1];
+        const [horas, minutos] = tempo.split(':').map(Number);
+        return -(horas * 60 + minutos);
+      } else {
+        const [horas, minutos] = tempo.split(':').map(Number);
+        return horas * 60 + minutos;
+      }
     }
     return 0;
   }
 
   converterParaHoraFormatada(minutosTotais: number): string {
     if (minutosTotais) {
-      const horas = Math.floor(minutosTotais / 60);
+      const horas = Math.abs(Math.floor(minutosTotais / 60));
       const minutos = minutosTotais % 60;
 
       const horasFormatadas = horas.toString().padStart(2, '0');
       const minutosFormatados = minutos.toString().padStart(2, '0');
 
+      if (minutosTotais < 0) return `- ${horasFormatadas}:${minutosFormatados}`;
       return `${horasFormatadas}:${minutosFormatados}`;
     }
     return '00:00';
+  }
+
+  verificaDesvioNegativo(desvio: string): boolean {
+    return desvio.includes('-');
+  }
+
+  calculaHorasPlanejadasTotais(): string {
+    return this.converterParaHoraFormatada(
+      this.retornaListaColaboradoresTabela().reduce(
+        (sum, colaborador) =>
+          sum + (Number(colaborador.NHorasTotais) ?? 0) * 60,
+        0
+      ) || 0
+    );
+  }
+
+  calculaHorasApontadasTotais(): string {
+    return this.converterParaHoraFormatada(
+      this.retornaListaColaboradoresTabela().reduce(
+        (sum, colaborador) =>
+          sum + (this.converterParaMinutos(colaborador.NHorasApontadas) || 0),
+        0
+      ) || 0
+    );
+  }
+
+  calculaDesvioTotal(): string {
+    return this.converterParaHoraFormatada(
+      this.retornaListaColaboradoresTabela().reduce(
+        (sum, colaborador) =>
+          sum + (this.converterParaMinutos(colaborador.NDesvio) || 0),
+        0
+      ) || 0
+    );
   }
 }

@@ -103,6 +103,20 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
         proejto.colaboradores = [];
       }
     });
+
+    this.listaProejtos = this.ordenarProjetosPorNome(this.listaProejtos);
+  }
+
+  ordenarProjetosPorNome(projetos: Projeto[]): Projeto[] {
+    return projetos.sort((a, b) => {
+      if (a.ANome.toLowerCase() < b.ANome.toLowerCase()) {
+        return -1;
+      }
+      if (a.ANome.toLowerCase() > b.ANome.toLowerCase()) {
+        return 1;
+      }
+      return 0;
+    });
   }
 
   async buscaProjetos(): Promise<void> {
@@ -220,37 +234,4 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
         ),
     };
   }
-
-  // retornaApontamentosAlterados(): ApontamentosPersistencia[] {
-  //   let apontamentos: ApontamentosPersistencia[] = [];
-  //   this.apontamentoHorasComponent?.listaApontamentosAtual.forEach(
-  //     (apontamento: Apontamento, index: number) => {
-  //       if (apontamento.alterado)
-  //         apontamentos.push({
-  //           nCodigoProjeto: Number(
-  //             this.apontamentoHorasComponent?.data.apontamentos[index]
-  //               .NCodigoProjeto
-  //           ),
-  //           nQuantidade: Number(
-  //             this.apontamentoHorasComponent?.data.apontamentos[index]
-  //               .NQuantidade
-  //           ),
-  //           aTipo: 'E',
-  //         });
-  //     }
-  //   );
-
-  //   this.apontamentoHorasComponent?.listaApontamentosAtual.forEach(
-  //     (apontamento: Apontamento) => {
-  //       if (apontamento.alterado)
-  //         apontamentos.push({
-  //           nCodigoProjeto: Number(apontamento.NCodigoProjeto),
-  //           nQuantidade: Number(apontamento.NQuantidade),
-  //           aTipo: 'I',
-  //         });
-  //     }
-  //   );
-
-  //   return apontamentos;
-  // }
 }
