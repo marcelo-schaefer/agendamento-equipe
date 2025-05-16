@@ -27,7 +27,6 @@ import { InformacoesColaboradorService } from '../../services/informacoes-colabo
 import { firstValueFrom } from 'rxjs';
 import { Message, MessageService } from 'primeng/api';
 import { CorpoBusca } from '../../services/models/corpo-busca';
-import { BuscaColaboradoresComponent } from '../busca-colaboradores/busca-colaboradores.component';
 
 @Component({
   selector: 'app-dados-projeto',
@@ -50,13 +49,9 @@ import { BuscaColaboradoresComponent } from '../busca-colaboradores/busca-colabo
     ToastModule,
     RippleModule,
     InputNumberModule,
-    BuscaColaboradoresComponent,
   ],
 })
 export class DadosProjetoComponent implements OnInit {
-  @ViewChild(BuscaColaboradoresComponent, { static: true })
-  buscaColaboradoresComponent: BuscaColaboradoresComponent | undefined;
-
   @Output()
   projetoSelecionadoEmit: EventEmitter<Projeto> = new EventEmitter<Projeto>();
 
@@ -93,7 +88,6 @@ export class DadosProjetoComponent implements OnInit {
 
   desabilitarFormulario(desabilitar: boolean): void {
     this.desabilitar = desabilitar;
-    this.buscaColaboradoresComponent.desabilitarFormulario(desabilitar);
   }
 
   selecionarColaborador(colaborador: Colaborador): void {
@@ -118,26 +112,13 @@ export class DadosProjetoComponent implements OnInit {
     });
   }
 
-  opcoesIniciaisColaboradores(): void {
-    this.buscaColaboradoresComponent.onScrollToBottom();
-  }
-
   limparFormulario(): void {
     this.projetoSelecionado = null;
-    if (this.buscaColaboradoresComponent)
-      this.buscaColaboradoresComponent.limparFormulario();
     this.colaboradorSelecionado = null;
     this.horasProjeto = 1;
   }
 
   adicionarColaboradorAoProjeto(): void {
-    this.colaboradorSelecionado.incluido = true;
-    this.colaboradorSelecionado.NHorasTotais = this.horasProjeto.toString();
-    this.colaboradorSelecionado.NDesvio = this.horasProjeto.toString();
-    this.colaboradorSelecionado.NHorasApontadas = '0';
-    this.colaboradorSelecionado.nIdProjetoVinculado =
-      this.projetoSelecionado.NId;
-
     this.apresentarErroColaboradorDuplicado(false);
     this.colaboradorAdicionado.emit(this.colaboradorSelecionado);
   }

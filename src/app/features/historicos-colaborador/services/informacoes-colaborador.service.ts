@@ -8,6 +8,8 @@ import { RetornoGravacao } from './models/retorno-gravacao';
 import { Persistencia } from './models/persistencia';
 import { RetornoProjeto } from './models/projeto.model';
 import { CorpoBusca } from './models/corpo-busca';
+import { BuscaLancamentos } from './models/busca-lancamentos';
+import { RetornoLancamento } from './models/lancamento';
 
 @Injectable({
   providedIn: 'root',
@@ -19,7 +21,7 @@ export class InformacoesColaboradorService {
       encryption: '3',
       server: 'https://ocweb03s1p.seniorcloud.com.br:31061/',
       module: 'rubi',
-      service: 'com.senior.g5.rh.fp.EPO',
+      service: 'com.senior.g5.rh.fp.agendaEquipe',
       port: '',
       user: '',
       password: '',
@@ -28,15 +30,6 @@ export class InformacoesColaboradorService {
   };
 
   private http = inject(HttpClient);
-
-  public obterInformacoesColaborador(): Observable<RetornoColaborador> {
-    return this.http.post<RetornoColaborador>(environment.plugin.invoke, {
-      ...this.basePayload,
-      inputData: {
-        ...this.basePayload.inputData,
-      },
-    });
-  }
 
   public obterListaProjetos(): Observable<RetornoProjeto> {
     return this.http.post<RetornoProjeto>(environment.plugin.invoke, {
@@ -61,13 +54,26 @@ export class InformacoesColaboradorService {
     });
   }
 
+  public buscaLancamentos(
+    body: BuscaLancamentos
+  ): Observable<RetornoLancamento> {
+    return this.http.post<RetornoLancamento>(environment.plugin.invoke, {
+      ...this.basePayload,
+      inputData: {
+        ...this.basePayload.inputData,
+        port: 'buscaLancamentos',
+        ...body,
+      },
+    });
+  }
+
   public gravarEnvio(body: Persistencia): Observable<RetornoGravacao> {
     return this.http.post<RetornoGravacao>(environment.plugin.invoke, {
       ...this.basePayload,
       inputData: {
         ...this.basePayload.inputData,
         ...body,
-        port: 'persisiteEPO',
+        port: 'persisiteAgendamento',
       },
     });
   }

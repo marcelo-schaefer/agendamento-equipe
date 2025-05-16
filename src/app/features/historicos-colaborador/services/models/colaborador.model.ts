@@ -6,12 +6,7 @@ export interface Colaborador {
   NTipoColaborador: string;
   NMatricula: string;
   ANome: string;
-  NHorasTotais: string;
-  NHorasApontadas: string;
-  NDesvio: string;
-  AOrigem: string;
-  nIdProjetoVinculado?: string;
-  incluido?: boolean;
+  projetos: Projeto[];
 }
 
 export class RetornoColaborador {

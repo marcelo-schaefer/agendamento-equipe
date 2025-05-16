@@ -21,9 +21,7 @@ import { MessageService } from 'primeng/api';
 import { Apontamento } from './services/models/apontamento';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DadosProjetoComponent } from './components/dados-projeto/dados-projeto.component';
-import { ColaboradoresVinculadosComponent } from './components/colaboradores-vinculados/colaboradores-vinculados.component';
 import { Projeto } from './services/models/projeto.model';
-import { BuscaColaboradoresComponent } from './components/busca-colaboradores/busca-colaboradores.component';
 import {
   ColaboradoresPersistencia,
   Persistencia,
@@ -35,8 +33,6 @@ import {
   imports: [
     FormsModule,
     DadosProjetoComponent,
-    ColaboradoresVinculadosComponent,
-    BuscaColaboradoresComponent,
     LoadingComponent,
     CalendarModule,
     ToastModule,
@@ -50,11 +46,6 @@ import {
 export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   @ViewChild(DadosProjetoComponent, { static: true })
   dadosProjetoComponent: DadosProjetoComponent | undefined;
-
-  @ViewChild(ColaboradoresVinculadosComponent, { static: true })
-  colaboradoresVinculadosComponent:
-    | ColaboradoresVinculadosComponent
-    | undefined;
 
   private informacoesColaboradorService = inject(InformacoesColaboradorService);
 
@@ -78,7 +69,6 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
 
   inicializaComponente(): void {
     this.dadosProjetoComponent.limparFormulario();
-    this.colaboradoresVinculadosComponent.limparFormulario();
   }
 
   async inicializarBuscaProjetos(): Promise<void> {
@@ -94,15 +84,6 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   tratarProjetos(): void {
     if (!Array.isArray(this.listaProejtos))
       this.listaProejtos = [this.listaProejtos];
-
-    this.listaProejtos.forEach((proejto) => {
-      if (proejto.colaboradores) {
-        if (!Array.isArray(proejto.colaboradores))
-          proejto.colaboradores = [proejto.colaboradores];
-      } else {
-        proejto.colaboradores = [];
-      }
-    });
 
     this.listaProejtos = this.ordenarProjetosPorNome(this.listaProejtos);
   }
@@ -124,10 +105,9 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
       const projetos = await firstValueFrom(
         this.informacoesColaboradorService.obterListaProjetos()
       );
-      if (projetos.outputData.message || projetos.outputData.ARetorno != 'OK') {
+      if (projetos.outputData.message) {
         this.notificarErro(
-          'Erro ao buscar a lista de projetos, ' +
-            (projetos.outputData.message || projetos.outputData.ARetorno)
+          'Erro ao buscar a lista de projetos, ' + projetos.outputData.message
         );
       } else this.listaProejtos = projetos.outputData.projetos;
     } catch (error) {
@@ -140,27 +120,8 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     }
   }
 
-  validarAdicaoColaborador(colaborador: Colaborador): void {
-    if (
-      this.colaboradoresVinculadosComponent
-        .retornaListaColaboradoresTabela()
-        .filter(
-          (f) =>
-            f.NMatricula == colaborador.NMatricula &&
-            colaborador.AOrigem == 'Planejado'
-        ).length > 0
-    )
-      this.dadosProjetoComponent.apresentarErroColaboradorDuplicado(true);
-    else
-      this.colaboradoresVinculadosComponent.adicionarColaborador(colaborador);
-  }
-
   receberProjetoSelecionado(projeto: Projeto): void {
     this.projetoSelecionado = projeto;
-    this.colaboradoresVinculadosComponent.limparFormulario();
-    this.colaboradoresVinculadosComponent.preencherProjetoSelecionado(
-      this.projetoSelecionado
-    );
   }
 
   notificarErro(mensagem: string) {
@@ -190,7 +151,6 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
 
   desabilitarFormulario(desabilitar: boolean): void {
     this.dadosProjetoComponent.desabilitarFormulario(desabilitar);
-    this.colaboradoresVinculadosComponent.desabilitarFormulario(desabilitar);
   }
 
   async gravarEnvio(): Promise<void> {
@@ -220,18 +180,18 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
 
   montaCorpoEnvio(): Persistencia {
     return {
-      colaboradores:
-        this.colaboradoresVinculadosComponent.colaboradoresAdicionados.map(
-          (colab) => {
-            return {
-              nEmpresa: Number(colab.NEmpresa),
-              nTipoColaborador: Number(colab.NTipoColaborador),
-              nMatricula: Number(colab.NMatricula),
-              nTotalHoras: Number(colab.NHorasTotais),
-              nCodigoProjeto: Number(colab.nIdProjetoVinculado),
-            } as ColaboradoresPersistencia;
-          }
-        ),
+      colaboradores: [],
+      // this.colaboradoresVinculadosComponent.colaboradoresAdicionados.map(
+      //   (colab) => {
+      //     return {
+      //       nEmpresa: Number(colab.NEmpresa),
+      //       nTipoColaborador: Number(colab.NTipoColaborador),
+      //       nMatricula: Number(colab.NMatricula),
+      //       nTotalHoras: Number(colab.NHorasTotais),
+      //       nCodigoProjeto: Number(colab.nIdProjetoVinculado),
+      //     } as ColaboradoresPersistencia;
+      //   }
+      // ),
     };
   }
 }
