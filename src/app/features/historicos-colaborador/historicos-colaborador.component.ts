@@ -26,6 +26,7 @@ import {
   ColaboradoresPersistencia,
   Persistencia,
 } from './services/models/persistencia';
+import { CorpoBusca } from './services/models/corpo-busca';
 
 @Component({
   selector: 'app-historicos-colaborador',
@@ -53,6 +54,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   carregandoInformacoes = signal(false);
 
   listaProejtos!: Projeto[];
+  listaColaboradores!: Colaborador[];
   projetoSelecionado!: Projeto;
 
   constructor(private messageService: MessageService) {}
@@ -63,12 +65,23 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
+    await this.inicializarBuscaColaboradores();
     await this.inicializarBuscaProjetos();
     this.carregandoInformacoes.set(false);
   }
 
   inicializaComponente(): void {
     this.dadosProjetoComponent.limparFormulario();
+  }
+
+  async inicializarBuscaColaboradores(query?: string): Promise<void> {
+    this.dadosProjetoComponent.carregarTabela(true);
+    await this.buscaColaboradores(query);
+    this.tratarColaboradores();
+    this.dadosProjetoComponent.preencheListaColaboradores(
+      this.listaColaboradores
+    );
+    this.dadosProjetoComponent.carregarTabela(false);
   }
 
   async inicializarBuscaProjetos(): Promise<void> {
@@ -81,11 +94,25 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     window.location.reload();
   }
 
-  tratarProjetos(): void {
-    if (!Array.isArray(this.listaProejtos))
-      this.listaProejtos = [this.listaProejtos];
+  tratarColaboradores(): void {
+    if (this.listaColaboradores) {
+      if (!Array.isArray(this.listaColaboradores))
+        this.listaColaboradores = [this.listaColaboradores];
 
-    this.listaProejtos = this.ordenarProjetosPorNome(this.listaProejtos);
+      this.listaColaboradores.forEach((colaborador) => {
+        if (colaborador.projetos && !Array.isArray(colaborador.projetos))
+          colaborador.projetos = [colaborador.projetos];
+      });
+    }
+  }
+
+  tratarProjetos(): void {
+    if (this.listaProejtos) {
+      if (!Array.isArray(this.listaProejtos))
+        this.listaProejtos = [this.listaProejtos];
+
+      this.listaProejtos = this.ordenarProjetosPorNome(this.listaProejtos);
+    }
   }
 
   ordenarProjetosPorNome(projetos: Projeto[]): Projeto[] {
@@ -114,6 +141,32 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
       console.error(error);
       this.notificarErro(
         'Erro ao buscar a lista de projetos, tente mais tarde ou contate o admnistrador. ' +
+          error
+      );
+      this.carregandoInformacoes.set(false);
+    }
+  }
+
+  async buscaColaboradores(query?: string): Promise<void> {
+    try {
+      const body: CorpoBusca = {
+        nTop: 10,
+        nSkip: 0,
+        aQuery: query,
+      };
+      const projetos = await firstValueFrom(
+        this.informacoesColaboradorService.obterListaColaboradores(body)
+      );
+      if (projetos.outputData.message) {
+        this.notificarErro(
+          'Erro ao buscar a lista de colaboradores, ' +
+            projetos.outputData.message
+        );
+      } else this.listaColaboradores = projetos.outputData.colaboradores;
+    } catch (error) {
+      console.error(error);
+      this.notificarErro(
+        'Erro ao buscar a lista de colaboradores, tente mais tarde ou contate o admnistrador. ' +
           error
       );
       this.carregandoInformacoes.set(false);

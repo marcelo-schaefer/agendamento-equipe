@@ -1,0 +1,10 @@
+@media (max-width: 576px) {
+  .form-responsive {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.centro {
+  text-align: center;
+}

@@ -3,7 +3,7 @@ export class BuscaLancamentos {
   nTipoColaborador: number;
   nMatricula: number;
   nCodigoProjeto: number;
-  dDatalnicio: string;
+  dDataInicio: string;
   dDataFim: string;
-  aFullTime: number;
+  aFullTime: string;
 }

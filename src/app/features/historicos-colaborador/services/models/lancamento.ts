@@ -5,7 +5,7 @@ export class Lancamento {
 
 export class RetornoLancamento {
   outputData: {
-    colaboradores: RetornoLancamento[];
+    lancamentos: Lancamento[];
     message?: string;
   };
 }
