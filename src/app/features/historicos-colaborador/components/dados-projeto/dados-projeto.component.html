@@ -18,6 +18,7 @@
           pInputText
           style="width: 400px"
           [(ngModel)]="colaboradorParaBusca"
+          [disabled]="desabilitar"
           placeholder="Informe um colaborador para busca"
         />
         <button
@@ -25,8 +26,22 @@
           type="button"
           label="Buscar"
           icon="pi pi-search"
+          pTooltip="teste"
+          [disabled]="desabilitar"
           (click)="emitirColaborador()"
         ></button>
+      </div>
+    </div>
+    <div class="mb-4">
+      <div
+        class="form-responsive"
+        style="display: flex; gap: 0.5rem; align-items: start"
+      >
+        <p-messages
+          [(value)]="messages"
+          [enableService]="false"
+          [closable]="false"
+        />
       </div>
     </div>
 
@@ -34,12 +49,13 @@
 
     <p-table
       [value]="listaColaboradores"
-      dataKey="id"
+      dataKey="NMatricula"
       [tableStyle]="{ 'min-width': '50rem' }"
       [loading]="loading"
       scrollHeight="flex"
       [scrollable]="true"
       scrollHeight="600px"
+      [expandedRowKeys]="expandedRows"
     >
       <ng-template pTemplate="header">
         <tr>
@@ -57,7 +73,7 @@
       </ng-template>
       <ng-template pTemplate="body" let-colaborador let-expanded="expanded">
         <tr>
-          <td>
+          <td pFrozenColumn>
             <p-button
               type="button"
               pRipple
@@ -138,7 +154,7 @@
             <p-button
               label="Preencher datas"
               [disabled]="!colaborador.lancamentos"
-              (onClick)="apresentarPreenchimento = true"
+              (onClick)="inicializarPreenchimento(colaborador)"
               autoWidth="false"
               [style]="{ width: '175px' }"
             />
@@ -192,7 +208,9 @@
                             [(ngModel)]="porta.ATipoLancamento"
                             appendTo="body"
                             autoWidth="false"
+                            [showClear]="true"
                             [style]="{ width: '125px' }"
+                            [disabled]="!validaEdicaoLancamento(porta.DData)"
                           ></p-dropdown>
                         </ng-template>
                         <ng-template pTemplate="output">
@@ -249,8 +267,15 @@
           dateFormat="dd/mm/yy"
           [(ngModel)]="dataFinal"
           appendTo="body"
+          [ngClass]="{
+            'ng-invalid ng-dirty': erroNasDatas
+          }"
         />
+        <span *ngIf="erroNasDatas" class="p-error">
+          Data Início maior que a Final.
+        </span>
       </div>
+
       <div class="flex justify-content-end gap-2">
         <p-button
           label="Cancelar"
@@ -275,8 +300,8 @@
         <p-calendar
           dateFormat="dd/mm/yy"
           [(ngModel)]="dataInicioPreenchimento"
-          [minDate]="dataInicio"
-          [maxDate]="dataFinal"
+          [minDate]="dataInicioMinimaPreenchimento"
+          [maxDate]="dataFinalMaximaPreenchimento"
           appendTo="body"
         />
       </div>
@@ -285,10 +310,16 @@
         <p-calendar
           dateFormat="dd/mm/yy"
           [(ngModel)]="dataFinalPreenchimento"
-          [minDate]="dataInicio"
-          [maxDate]="dataFinal"
+          [minDate]="dataInicioMinimaPreenchimento"
+          [maxDate]="dataFinalMaximaPreenchimento"
           appendTo="body"
+          [ngClass]="{
+            'ng-invalid ng-dirty': erroNasDatas
+          }"
         />
+        <span *ngIf="erroNasDatas" class="p-error">
+          Data Início maior que a Final.
+        </span>
       </div>
       <div class="flex align-items-center gap-3 mb-5">
         <label class="font-semibold w-6rem">Tipo de Alocação</label>
@@ -297,6 +328,7 @@
           [(ngModel)]="alocacaoSelecionada"
           placeholder="Selecione um tipo de alocação"
           appendTo="body"
+          [style]="{ width: '300px' }"
         />
       </div>
       <div class="flex justify-content-end gap-2">
@@ -308,5 +340,17 @@
         <p-button label="Preencher" (onClick)="aplicarPreenchimento()" />
       </div>
     </p-dialog>
+
+    <br />
+    <div class="col-12 flex flex-column align-items-end">
+      <button
+        pButton
+        pRipple
+        (click)="enviar()"
+        label="Gravar"
+        [disabled]="desabilitar"
+        class="p-button-success"
+      ></button>
+    </div>
   </ng-template>
 </p-card>

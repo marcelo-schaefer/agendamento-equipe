@@ -27,6 +27,7 @@ import {
   Persistencia,
 } from './services/models/persistencia';
 import { CorpoBusca } from './services/models/corpo-busca';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-historicos-colaborador',
@@ -91,7 +92,13 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   }
 
   async reinicializarComponente(): Promise<void> {
-    window.location.reload();
+    // window.location.reload();
+    this.carregandoInformacoes.set(true);
+    this.dadosProjetoComponent.limparFormulario();
+    await this.inicializarBuscaColaboradores();
+    await this.inicializarBuscaProjetos();
+    this.carregandoInformacoes.set(false);
+    this.desabilitarFormulario(false);
   }
 
   tratarColaboradores(): void {
@@ -173,10 +180,6 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     }
   }
 
-  receberProjetoSelecionado(projeto: Projeto): void {
-    this.projetoSelecionado = projeto;
-  }
-
   notificarErro(mensagem: string) {
     this.messageService.add({
       severity: 'error',
@@ -198,8 +201,6 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     this.desabilitarFormulario(true);
     this.carregandoInformacoes.set(true);
     await this.gravarEnvio();
-    this.carregandoInformacoes.set(false);
-    this.desabilitarFormulario(false);
   }
 
   desabilitarFormulario(desabilitar: boolean): void {
@@ -213,10 +214,11 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
       (data) => {
         if (data.outputData.message || data.outputData.ARetorno != 'OK') {
           this.notificarErro(
-            'Erro ao gravar os colaboradores no projeto, ' +
+            'Erro ao gravar os agendamentos dos colaboradores, ' +
               (data.outputData?.message || data.outputData?.ARetorno)
           );
           this.carregandoInformacoes.set(false);
+          this.desabilitarFormulario(false);
         } else {
           this.notificarSucesso('Gravado com sucesso!');
           this.reinicializarComponente();
@@ -224,27 +226,49 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
       },
       () => {
         this.notificarErro(
-          'Erro ao gravar os apontramentos, tente mais tarde ou contate o administrador'
+          'Erro ao gravar os agendamentos dos colaboradores, tente mais tarde ou contate o administrador'
         );
         this.carregandoInformacoes.set(false);
+        this.desabilitarFormulario(false);
       }
     );
   }
 
+  validaEdicaoLancamento(data: string | Date): boolean {
+    const dataHoje = new Date();
+    dataHoje.setHours(0, 0, 0, 0);
+    return typeof data === 'string'
+      ? this.stringParaDate(data) >= dataHoje
+      : data >= dataHoje;
+  }
+
+  stringParaDate(dataStr: string): Date {
+    const [dia, mes, ano] = dataStr.split('/').map(Number);
+    return new Date(ano, mes - 1, dia);
+  }
+
   montaCorpoEnvio(): Persistencia {
-    return {
+    const persistencia: Persistencia = {
       colaboradores: [],
-      // this.colaboradoresVinculadosComponent.colaboradoresAdicionados.map(
-      //   (colab) => {
-      //     return {
-      //       nEmpresa: Number(colab.NEmpresa),
-      //       nTipoColaborador: Number(colab.NTipoColaborador),
-      //       nMatricula: Number(colab.NMatricula),
-      //       nTotalHoras: Number(colab.NHorasTotais),
-      //       nCodigoProjeto: Number(colab.nIdProjetoVinculado),
-      //     } as ColaboradoresPersistencia;
-      //   }
-      // ),
     };
+
+    this.dadosProjetoComponent.listaColaboradores.forEach((colaborador) => {
+      if (colaborador.lancamentos)
+        colaborador.lancamentos.forEach((lancamento) => {
+          if (this.validaEdicaoLancamento(lancamento.DData))
+            persistencia.colaboradores.push({
+              nEmpresa: Number(colaborador.NEmpresa),
+              nTipoColaborador: Number(colaborador.NTipoColaborador),
+              nMatricula: Number(colaborador.NMatricula),
+              nCodigoProjeto: Number(colaborador.projetoSelecionado.NId),
+
+              aFullTime:
+                colaborador.tipoAlocacaoSelecionado == 'Full-Time' ? 'S' : 'N',
+              dData: lancamento.DData,
+              aTipoLAncamento: lancamento.ATipoLancamento,
+            } as ColaboradoresPersistencia);
+        });
+    });
+    return persistencia;
   }
 }

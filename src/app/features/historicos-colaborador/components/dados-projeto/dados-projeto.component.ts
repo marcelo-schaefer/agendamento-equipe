@@ -58,9 +58,9 @@ import { Lancamento } from '../../services/models/lancamento';
     FloatLabelModule,
   ],
 })
-export class DadosProjetoComponent implements OnInit {
+export class DadosProjetoComponent {
   @Output()
-  projetoSelecionadoEmit: EventEmitter<Projeto> = new EventEmitter<Projeto>();
+  enviarSolicitacao: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   @Output()
   colaboradorEmitter: EventEmitter<string> = new EventEmitter<string>();
@@ -88,8 +88,12 @@ export class DadosProjetoComponent implements OnInit {
   apresentarFiltroData = false;
   apresentarPreenchimento = false;
   loading = false;
+  erroNasDatas = false;
+  desabilitar = false;
   dataInicio: Date;
   dataFinal: Date;
+  dataInicioMinimaPreenchimento: Date;
+  dataFinalMaximaPreenchimento: Date;
   dataInicioPreenchimento: Date;
   dataFinalPreenchimento: Date;
   alocacaoSelecionada: string;
@@ -98,20 +102,17 @@ export class DadosProjetoComponent implements OnInit {
 
   messages: Message[] | undefined = [
     {
-      severity: 'error',
-      detail: 'O colaborador já está presente ou previsto no projeto.',
+      severity: 'info',
+      detail: 'Salve as alterações antes de buscar novos colaboradores',
     },
   ];
-
-  desabilitar = false;
-  apresentarErro = false;
+  expandedRows: { [key: string]: boolean } = {};
 
   constructor(private messageService: MessageService) {}
 
-  ngOnInit() {}
-
   preencheListaColaboradores(colaboradores: Colaborador[]): void {
     this.listaColaboradores = colaboradores;
+    this.expandedRows = {};
   }
 
   carregarTabela(loading: boolean): void {
@@ -123,16 +124,8 @@ export class DadosProjetoComponent implements OnInit {
   }
 
   desabilitarFormulario(desabilitar: boolean): void {
+    this.carregarTabela(desabilitar);
     this.desabilitar = desabilitar;
-  }
-
-  selecionarColaborador(colaborador: Colaborador): void {
-    this.colaboradorSelecionado = colaborador;
-  }
-
-  selecionarProjeto(projeto: DropdownChangeEvent): void {
-    this.apresentarErroColaboradorDuplicado(false);
-    this.emitirColaborador();
   }
 
   async buscaLancamentos(): Promise<void> {
@@ -216,6 +209,7 @@ export class DadosProjetoComponent implements OnInit {
   inicializarFiltroData(colaborador: Colaborador): void {
     this.colaboradorSelecionado = colaborador;
     this.colaboradorSelecionado.validandoCampos = true;
+    this.erroNasDatas = false;
 
     if (
       this.colaboradorSelecionado.projetoSelecionado &&
@@ -224,26 +218,53 @@ export class DadosProjetoComponent implements OnInit {
       this.apresentarFiltroData = true;
   }
 
+  inicializarPreenchimento(colaborador: Colaborador): void {
+    this.colaboradorSelecionado = colaborador;
+    this.erroNasDatas = false;
+    this.dataInicioMinimaPreenchimento = this.retornaDataMinimaPreenchimento();
+    this.dataFinalMaximaPreenchimento = this.retornaDataMaximaPreenchimento();
+
+    this.apresentarPreenchimento = true;
+  }
+
   aplicarFiltroData(): void {
     if (this.dataInicio || this.dataFinal) {
-      if (this.dataInicio && !this.dataFinal)
+      if (this.dataInicio && !this.dataFinal) {
+        this.dataFinal = new Date();
         this.dataFinal.setDate(this.dataInicio.getDate() + 30);
-      else if (!this.dataInicio && this.dataFinal)
-        this.dataInicio.setDate(this.dataInicio.getDate() - 30);
+      } else if (!this.dataInicio && this.dataFinal) {
+        this.dataInicio = new Date();
+        this.dataInicio.setDate(this.dataFinal.getDate() - 30);
+      }
 
-      this.buscaLancamentos();
+      if (this.dataInicio && this.dataFinal) {
+        this.erroNasDatas = !this.validarDataInicioAntesDaDataFim(
+          this.dataInicio,
+          this.dataFinal
+        );
+
+        if (!this.erroNasDatas) this.buscaLancamentos();
+      } else this.buscaLancamentos();
     }
-    this.apresentarFiltroData = false;
+    this.apresentarFiltroData = this.erroNasDatas;
   }
 
   aplicarPreenchimento(): void {
     const colaboradorDaLista = this.listaColaboradores.find(
       (f) => f.NMatricula == this.colaboradorSelecionado.NMatricula
     );
-    if (colaboradorDaLista) {
+
+    if (this.dataInicioPreenchimento && this.dataFinalPreenchimento) {
+      this.erroNasDatas = !this.validarDataInicioAntesDaDataFim(
+        this.dataInicioPreenchimento,
+        this.dataFinalPreenchimento
+      );
+    }
+    if (colaboradorDaLista && !this.erroNasDatas) {
       colaboradorDaLista.lancamentos.forEach((lancamento) => {
         const dataLancamento = this.stringParaDate(lancamento.DData);
         if (
+          this.validaEdicaoLancamento(lancamento.DData) &&
           (!this.dataInicioPreenchimento ||
             dataLancamento >= this.dataInicioPreenchimento) &&
           (!this.dataFinalPreenchimento ||
@@ -252,14 +273,16 @@ export class DadosProjetoComponent implements OnInit {
           lancamento.ATipoLancamento = this.alocacaoSelecionada;
       });
     }
-    this.apresentarPreenchimento = false;
+    this.apresentarPreenchimento = this.erroNasDatas;
   }
 
   colarColaborador(colaborador: Colaborador): void {
     colaborador.projetoSelecionado = this.colaboradorCopiado.projetoSelecionado;
     colaborador.tipoAlocacaoSelecionado =
       this.colaboradorCopiado.tipoAlocacaoSelecionado;
-    colaborador.lancamentos = this.colaboradorCopiado.lancamentos;
+    colaborador.lancamentos = this.colaboradorCopiado.lancamentos.filter((f) =>
+      this.validaEdicaoLancamento(f.DData)
+    );
   }
 
   emitirColaborador(): void {
@@ -275,18 +298,40 @@ export class DadosProjetoComponent implements OnInit {
   }
 
   limparFormulario(): void {
-    this.colaboradorSelecionado = null;
+    this.listaColaboradores = [];
   }
 
-  adicionarColaboradorAoProjeto(): void {
-    this.apresentarErroColaboradorDuplicado(false);
+  retornaDataMinimaPreenchimento(): Date {
+    return this.colaboradorSelecionado &&
+      (this.colaboradorSelecionado.lancamentos?.length || 0) > 0
+      ? this.stringParaDate(this.colaboradorSelecionado.lancamentos[0].DData)
+      : new Date();
   }
 
-  validarHabilitarBotaoAdicionar(): boolean {
-    return this.desabilitar || !this.colaboradorSelecionado;
+  retornaDataMaximaPreenchimento(): Date {
+    return this.colaboradorSelecionado &&
+      (this.colaboradorSelecionado.lancamentos?.length || 0) > 0
+      ? this.stringParaDate(
+          this.colaboradorSelecionado.lancamentos[
+            this.colaboradorSelecionado.lancamentos?.length - 1
+          ].DData
+        )
+      : new Date();
   }
 
-  apresentarErroColaboradorDuplicado(apresentar: boolean): void {
-    this.apresentarErro = apresentar;
+  validaEdicaoLancamento(data: string | Date): boolean {
+    const dataHoje = new Date();
+    dataHoje.setHours(0, 0, 0, 0);
+    return typeof data === 'string'
+      ? this.stringParaDate(data) >= dataHoje
+      : data >= dataHoje;
+  }
+
+  validarDataInicioAntesDaDataFim(dataInicio: Date, dataFim: Date): boolean {
+    return dataInicio <= dataFim;
+  }
+
+  enviar(): void {
+    this.enviarSolicitacao.emit(true);
   }
 }
