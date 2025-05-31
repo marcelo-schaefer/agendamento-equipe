@@ -32,6 +32,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { BuscaLancamentos } from '../../services/models/busca-lancamentos';
 import { format } from 'date-fns';
 import { Lancamento } from '../../services/models/lancamento';
+import { BuscaColaboradoresComponent } from '../busca-colaboradores/busca-colaboradores.component';
 
 @Component({
   selector: 'app-dados-projeto',
@@ -56,9 +57,13 @@ import { Lancamento } from '../../services/models/lancamento';
     InputNumberModule,
     DialogModule,
     FloatLabelModule,
+    BuscaColaboradoresComponent,
   ],
 })
-export class DadosProjetoComponent {
+export class DadosProjetoComponent implements OnInit, AfterViewInit {
+  @ViewChild(BuscaColaboradoresComponent, { static: true })
+  buscaColaboradoresComponent: BuscaColaboradoresComponent | undefined;
+
   @Output()
   enviarSolicitacao: EventEmitter<boolean> = new EventEmitter<boolean>();
 
@@ -110,6 +115,14 @@ export class DadosProjetoComponent {
 
   constructor(private messageService: MessageService) {}
 
+  ngOnInit(): void {
+    console.log('Inicializando componente');
+  }
+
+  ngAfterViewInit(): void {
+    console.log('Finalizando inicialização do componente');
+  }
+
   preencheListaColaboradores(colaboradores: Colaborador[]): void {
     this.listaColaboradores = colaboradores;
     this.expandedRows = {};
@@ -143,9 +156,11 @@ export class DadosProjetoComponent {
         );
       } else {
         const colaboradorDaLista = this.listaColaboradores.find(
-          (f) => f.NMatricula == this.colaboradorSelecionado.NMatricula
+          (f) => f.id == this.colaboradorSelecionado.id
         );
         if (colaboradorDaLista) {
+          if (!Array.isArray(projetos.outputData.lancamentos))
+            projetos.outputData.lancamentos = [projetos.outputData.lancamentos];
           colaboradorDaLista.lancamentos = projetos.outputData.lancamentos;
         }
       }
@@ -157,6 +172,27 @@ export class DadosProjetoComponent {
         'Erro ao buscar a lista de datas com lançamentos, tente mais tarde ou contate o admnistrador. ' +
           error
       );
+    }
+  }
+
+  recriarColaborador(colaborador: Colaborador): Colaborador {
+    return JSON.parse(JSON.stringify(colaborador));
+  }
+
+  adicionarColaboradorSelecionado(): void {
+    if (
+      this.buscaColaboradoresComponent &&
+      this.buscaColaboradoresComponent.colaborador
+    ) {
+      const colaborador = this.recriarColaborador(
+        this.buscaColaboradoresComponent.colaborador
+      );
+      const ultimoId =
+        this.listaColaboradores.length > 0
+          ? Math.max(...this.listaColaboradores.map((c) => c.id || 0))
+          : 0;
+      colaborador.id = ultimoId + 1;
+      this.listaColaboradores.push(colaborador);
     }
   }
 
@@ -251,7 +287,7 @@ export class DadosProjetoComponent {
 
   aplicarPreenchimento(): void {
     const colaboradorDaLista = this.listaColaboradores.find(
-      (f) => f.NMatricula == this.colaboradorSelecionado.NMatricula
+      (f) => f.id == this.colaboradorSelecionado.id
     );
 
     if (this.dataInicioPreenchimento && this.dataFinalPreenchimento) {
@@ -294,6 +330,7 @@ export class DadosProjetoComponent {
       severity: 'error',
       summary: 'Erro',
       detail: mensagem,
+      life: 7000,
     });
   }
 
@@ -331,7 +368,62 @@ export class DadosProjetoComponent {
     return dataInicio <= dataFim;
   }
 
+  excluirColaboradorPorId(id: number): void {
+    this.listaColaboradores = this.listaColaboradores.filter(
+      (colab) => colab.id !== id
+    );
+  }
+
+  verificarColaboradoresDuplicados(): number[] {
+    const duplicados: number[] = [];
+    const vistos = new Map<string, number[]>();
+
+    this.listaColaboradores.forEach((colab) => (colab.duplicado = false));
+
+    this.listaColaboradores.forEach((colab) => {
+      const chave = `${colab.NMatricula}-${colab.projetoSelecionado?.NId}-${colab.tipoAlocacaoSelecionado}`;
+      if (!vistos.has(chave)) {
+        vistos.set(chave, []);
+      }
+      vistos.get(chave)!.push(colab.id);
+    });
+
+    vistos.forEach((ids) => {
+      if (ids.length > 1) {
+        ids.forEach((id) => {
+          const colab = this.listaColaboradores.find((c) => c.id === id);
+          if (colab) colab.duplicado = true;
+          duplicados.push(id);
+        });
+      }
+    });
+
+    if (duplicados.length > 0)
+      this.notificarErro('Existem colaboradores duplicados.');
+    return duplicados;
+  }
+
+  validarCamposColaboradores(): boolean {
+    let valido = true;
+    this.listaColaboradores.forEach((colab) => {
+      colab.validandoCampos = true;
+
+      valido =
+        valido && !!colab.tipoAlocacaoSelecionado && !!colab.projetoSelecionado;
+    });
+    if (!valido) {
+      this.notificarErro(
+        'Todos os colaboradores devem ter projeto e tipo de alocação selecionados.'
+      );
+    }
+    return valido;
+  }
+
   enviar(): void {
-    this.enviarSolicitacao.emit(true);
+    if (
+      this.validarCamposColaboradores() &&
+      this.verificarColaboradoresDuplicados().length < 1
+    )
+      this.enviarSolicitacao.emit(true);
   }
 }

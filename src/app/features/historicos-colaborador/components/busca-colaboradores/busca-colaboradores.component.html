@@ -1,0 +1,26 @@
+<form [formGroup]="formDadosSolicitacao">
+  <p-dropdown
+    [options]="colaboradores || []"
+    [style]="{ width: '100%' }"
+    formControlName="colaboradorSelecionado"
+    placeholder="Selecione um Colaborador "
+    [emptyMessage]="'Nenhum colaborador disponível'"
+    [editable]="true"
+    (ngModelChange)="onSearch($event)"
+    (onChange)="selecionaColaborador($event)"
+    (onScrollToBottom)="onScrollToBottom()"
+    [loading]="isLoadingColaboradores || inicializando"
+    [virtualScroll]="true"
+    [virtualScrollItemSize]="30"
+    optionLabel="ANome"
+    [disabled]="desabilitar"
+    [panelStyle]="{ 'max-height': '200px', 'max-width': '100%' }"
+    appendTo="self"
+  >
+    <ng-template pTemplate="item" let-colaboradorItem>
+      <div>
+        {{ colaboradorItem?.NMatricula + " - " + colaboradorItem?.ANome }}
+      </div>
+    </ng-template></p-dropdown
+  >
+</form>

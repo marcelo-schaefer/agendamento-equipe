@@ -5,4 +5,7 @@
     (enviarSolicitacao)="enviarSolicitacao()"
     (colaboradorEmitter)="inicializarBuscaColaboradores($event)"
   ></app-dados-projeto>
+  <app-colaboradores-gravados
+    [hidden]="listaColaboradoresGravados.length < 1"
+  ></app-colaboradores-gravados>
 </app-loading>

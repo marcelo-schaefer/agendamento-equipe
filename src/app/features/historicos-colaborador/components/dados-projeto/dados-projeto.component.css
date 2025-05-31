@@ -8,3 +8,8 @@
 .centro {
   text-align: center;
 }
+
+.nome-duplicado {
+  color: red;
+  font-weight: bold;
+}

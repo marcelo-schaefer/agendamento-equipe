@@ -28,6 +28,8 @@ import {
 } from './services/models/persistencia';
 import { CorpoBusca } from './services/models/corpo-busca';
 import { ButtonModule } from 'primeng/button';
+import { BuscaColaboradoresComponent } from './components/busca-colaboradores/busca-colaboradores.component';
+import { ColaboradoresGravadosComponent } from './components/colaboradores-gravados/colaboradores-gravados.component';
 
 @Component({
   selector: 'app-historicos-colaborador',
@@ -35,6 +37,8 @@ import { ButtonModule } from 'primeng/button';
   imports: [
     FormsModule,
     DadosProjetoComponent,
+    BuscaColaboradoresComponent,
+    ColaboradoresGravadosComponent,
     LoadingComponent,
     CalendarModule,
     ToastModule,
@@ -49,13 +53,17 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   @ViewChild(DadosProjetoComponent, { static: true })
   dadosProjetoComponent: DadosProjetoComponent | undefined;
 
+  @ViewChild(ColaboradoresGravadosComponent, { static: true })
+  colaboradoresGravadosComponent: ColaboradoresGravadosComponent | undefined;
+
   private informacoesColaboradorService = inject(InformacoesColaboradorService);
 
   protected informacoesColaborador = signal<Colaborador | undefined>(undefined);
   carregandoInformacoes = signal(false);
 
-  listaProejtos!: Projeto[];
+  listaProjetos!: Projeto[];
   listaColaboradores!: Colaborador[];
+  listaColaboradoresGravados: Colaborador[] = [];
   projetoSelecionado!: Projeto;
 
   constructor(private messageService: MessageService) {}
@@ -66,7 +74,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    await this.inicializarBuscaColaboradores();
+    // await this.inicializarBuscaColaboradores();
     await this.inicializarBuscaProjetos();
     this.carregandoInformacoes.set(false);
   }
@@ -88,17 +96,24 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   async inicializarBuscaProjetos(): Promise<void> {
     await this.buscaProjetos();
     this.tratarProjetos();
-    this.dadosProjetoComponent.preencheListaProejtos(this.listaProejtos);
+    this.dadosProjetoComponent.preencheListaProejtos(this.listaProjetos);
   }
 
   async reinicializarComponente(): Promise<void> {
-    // window.location.reload();
+    this.validarColaboradoresGravados();
+    this.colaboradoresGravadosComponent.preencherListaColaborador(
+      this.listaColaboradoresGravados
+    );
     this.carregandoInformacoes.set(true);
     this.dadosProjetoComponent.limparFormulario();
-    await this.inicializarBuscaColaboradores();
-    await this.inicializarBuscaProjetos();
     this.carregandoInformacoes.set(false);
     this.desabilitarFormulario(false);
+  }
+
+  validarColaboradoresGravados(): void {
+    this.listaColaboradoresGravados = JSON.parse(
+      JSON.stringify(this.dadosProjetoComponent.listaColaboradores)
+    );
   }
 
   tratarColaboradores(): void {
@@ -114,11 +129,11 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   }
 
   tratarProjetos(): void {
-    if (this.listaProejtos) {
-      if (!Array.isArray(this.listaProejtos))
-        this.listaProejtos = [this.listaProejtos];
+    if (this.listaProjetos) {
+      if (!Array.isArray(this.listaProjetos))
+        this.listaProjetos = [this.listaProjetos];
 
-      this.listaProejtos = this.ordenarProjetosPorNome(this.listaProejtos);
+      this.listaProjetos = this.ordenarProjetosPorNome(this.listaProjetos);
     }
   }
 
@@ -143,7 +158,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
         this.notificarErro(
           'Erro ao buscar a lista de projetos, ' + projetos.outputData.message
         );
-      } else this.listaProejtos = projetos.outputData.projetos;
+      } else this.listaProjetos = projetos.outputData.projetos;
     } catch (error) {
       console.error(error);
       this.notificarErro(

@@ -1,0 +1,92 @@
+<p-card>
+  <p-toast />
+  <ng-template pTemplate="title">
+    <h2>Agendamentos Gravados</h2>
+  </ng-template>
+
+  <button
+    pButton
+    type="button"
+    label="Visualização de Datas"
+    [disabled]="desabilitar"
+    (click)="apresentarFiltroData = true"
+  ></button>
+
+  <p-table
+    [value]="listaColaboradores || []"
+    dataKey="id"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    scrollHeight="flex"
+    [scrollable]="true"
+    scrollHeight="600px"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th class="centro" style="width: 300px" pFrozenColumn>Nome</th>
+        <th class="centro" style="width: 200px" pFrozenColumn>Projeto</th>
+        <th class="centro" style="width: 200px" pFrozenColumn>Tipo Alocação</th>
+        <th *ngFor="let dataColuna of listaColunas" class="centro">
+          {{ dataColuna }}
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-colaborador let-expanded="expanded">
+      <tr>
+        <td pFrozenColumn style="width: 300px">
+          {{ colaborador.ANome || "" }}
+        </td>
+        <td pFrozenColumn style="width: 200px">
+          {{ colaborador.projetoSelecionado.ANome || "" }}
+        </td>
+        <td pFrozenColumn style="width: 200px">
+          {{ colaborador.tipoAlocacaoSelecionado || "" }}
+        </td>
+        <td *ngFor="let dataColuna of listaColunas" class="centro">
+          {{ obterTipoLancamento(colaborador, dataColuna) }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-dialog
+    header="Filtro de Datas"
+    [modal]="true"
+    [(visible)]="apresentarFiltroData"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+    [style]="{ width: '50vw' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <div class="flex align-items-center gap-3 mb-3">
+      <label class="font-semibold w-6rem">Data Início</label>
+      <p-calendar
+        dateFormat="dd/mm/yy"
+        [(ngModel)]="dataInicio"
+        appendTo="body"
+      />
+    </div>
+    <div class="flex align-items-center gap-3 mb-5">
+      <label class="font-semibold w-6rem">Data Final</label>
+      <p-calendar
+        dateFormat="dd/mm/yy"
+        [(ngModel)]="dataFinal"
+        appendTo="body"
+        [ngClass]="{
+          'ng-invalid ng-dirty': erroNasDatas
+        }"
+      />
+      <span *ngIf="erroNasDatas" class="p-error">
+        Data Início maior que a Final.
+      </span>
+    </div>
+
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        (onClick)="apresentarFiltroData = false"
+      />
+      <p-button label="Buscar" (onClick)="aplicarFiltroData()" />
+    </div>
+  </p-dialog>
+</p-card>
