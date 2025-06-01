@@ -168,13 +168,9 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   }
 
   async enviarSolicitacao(): Promise<void> {
-    this.validarColaboradoresGravados();
-    this.colaboradoresGravadosComponent.preencherListaColaborador(
-      this.listaColaboradoresGravados
-    );
-    // this.desabilitarFormulario(true);
-    // this.carregandoInformacoes.set(true);
-    // await this.gravarEnvio();
+    this.desabilitarFormulario(true);
+    this.carregandoInformacoes.set(true);
+    await this.gravarEnvio();
   }
 
   desabilitarFormulario(desabilitar: boolean): void {
