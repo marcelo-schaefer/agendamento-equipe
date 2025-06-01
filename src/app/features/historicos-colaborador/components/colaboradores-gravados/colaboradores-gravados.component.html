@@ -17,6 +17,7 @@
     dataKey="id"
     [tableStyle]="{ 'min-width': '50rem' }"
     scrollHeight="flex"
+    [frozenWidth]="'700px'"
     [scrollable]="true"
     scrollHeight="600px"
   >
@@ -25,6 +26,7 @@
         <th class="centro" style="width: 300px" pFrozenColumn>Nome</th>
         <th class="centro" style="width: 200px" pFrozenColumn>Projeto</th>
         <th class="centro" style="width: 200px" pFrozenColumn>Tipo Alocação</th>
+        <th class="centro" style="width: 100px" pFrozenColumn>Copiar</th>
         <th *ngFor="let dataColuna of listaColunas" class="centro">
           {{ dataColuna }}
         </th>
@@ -40,6 +42,15 @@
         </td>
         <td pFrozenColumn style="width: 200px">
           {{ colaborador.tipoAlocacaoSelecionado || "" }}
+        </td>
+        <td class="centro" pFrozenColumn style="width: 100px">
+          <p-button
+            [disabled]="!colaborador.lancamentos"
+            (onClick)="copiarColaborador(colaborador)"
+            autoWidth="false"
+            icon="pi pi-copy"
+            [style]="{ width: '75px' }"
+          />
         </td>
         <td *ngFor="let dataColuna of listaColunas" class="centro">
           {{ obterTipoLancamento(colaborador, dataColuna) }}

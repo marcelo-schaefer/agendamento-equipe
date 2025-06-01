@@ -13,3 +13,10 @@
   color: red;
   font-weight: bold;
 }
+
+td span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}

@@ -312,6 +312,10 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
     this.apresentarPreenchimento = this.erroNasDatas;
   }
 
+  copiarColaborador(colaborador: Colaborador): void {
+    this.colaboradorCopiado = JSON.parse(JSON.stringify(colaborador));
+  }
+
   colarColaborador(colaborador: Colaborador): void {
     colaborador.projetoSelecionado = this.colaboradorCopiado.projetoSelecionado;
     colaborador.tipoAlocacaoSelecionado =

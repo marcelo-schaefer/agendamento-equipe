@@ -1,5 +1,5 @@
 import { Colaborador } from './../../services/models/colaborador.model';
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -40,6 +40,10 @@ import { eachDayOfInterval, format } from 'date-fns';
   ],
 })
 export class ColaboradoresGravadosComponent {
+  @Output()
+  colaboradorEmitter: EventEmitter<Colaborador> =
+    new EventEmitter<Colaborador>();
+
   listaColaboradores: Colaborador[] = [];
   listaColunas: string[];
   desabilitar = false;
@@ -108,5 +112,9 @@ export class ColaboradoresGravadosComponent {
     if (!colaborador.lancamentos) return '-';
     const lanc = colaborador.lancamentos.find((l) => l.DData === data);
     return lanc ? lanc.ATipoLancamento : '-';
+  }
+
+  copiarColaborador(colaborador: Colaborador): void {
+    this.colaboradorEmitter.emit(colaborador);
   }
 }

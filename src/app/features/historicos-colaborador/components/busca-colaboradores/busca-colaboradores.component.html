@@ -1,5 +1,6 @@
 <form [formGroup]="formDadosSolicitacao">
   <p-dropdown
+    #meuDropdown
     [options]="colaboradores || []"
     [style]="{ width: '100%' }"
     formControlName="colaboradorSelecionado"
@@ -14,8 +15,6 @@
     [virtualScrollItemSize]="30"
     optionLabel="ANome"
     [disabled]="desabilitar"
-    [panelStyle]="{ 'max-height': '200px', 'max-width': '100%' }"
-    appendTo="self"
   >
     <ng-template pTemplate="item" let-colaboradorItem>
       <div>

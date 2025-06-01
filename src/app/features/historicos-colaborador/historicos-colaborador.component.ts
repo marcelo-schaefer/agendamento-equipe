@@ -74,23 +74,12 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    // await this.inicializarBuscaColaboradores();
     await this.inicializarBuscaProjetos();
     this.carregandoInformacoes.set(false);
   }
 
   inicializaComponente(): void {
     this.dadosProjetoComponent.limparFormulario();
-  }
-
-  async inicializarBuscaColaboradores(query?: string): Promise<void> {
-    this.dadosProjetoComponent.carregarTabela(true);
-    await this.buscaColaboradores(query);
-    this.tratarColaboradores();
-    this.dadosProjetoComponent.preencheListaColaboradores(
-      this.listaColaboradores
-    );
-    this.dadosProjetoComponent.carregarTabela(false);
   }
 
   async inicializarBuscaProjetos(): Promise<void> {
@@ -114,18 +103,6 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     this.listaColaboradoresGravados = JSON.parse(
       JSON.stringify(this.dadosProjetoComponent.listaColaboradores)
     );
-  }
-
-  tratarColaboradores(): void {
-    if (this.listaColaboradores) {
-      if (!Array.isArray(this.listaColaboradores))
-        this.listaColaboradores = [this.listaColaboradores];
-
-      this.listaColaboradores.forEach((colaborador) => {
-        if (colaborador.projetos && !Array.isArray(colaborador.projetos))
-          colaborador.projetos = [colaborador.projetos];
-      });
-    }
   }
 
   tratarProjetos(): void {
@@ -169,32 +146,6 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     }
   }
 
-  async buscaColaboradores(query?: string): Promise<void> {
-    try {
-      const body: CorpoBusca = {
-        nTop: 10,
-        nSkip: 0,
-        aQuery: query,
-      };
-      const projetos = await firstValueFrom(
-        this.informacoesColaboradorService.obterListaColaboradores(body)
-      );
-      if (projetos.outputData.message) {
-        this.notificarErro(
-          'Erro ao buscar a lista de colaboradores, ' +
-            projetos.outputData.message
-        );
-      } else this.listaColaboradores = projetos.outputData.colaboradores;
-    } catch (error) {
-      console.error(error);
-      this.notificarErro(
-        'Erro ao buscar a lista de colaboradores, tente mais tarde ou contate o admnistrador. ' +
-          error
-      );
-      this.carregandoInformacoes.set(false);
-    }
-  }
-
   notificarErro(mensagem: string) {
     this.messageService.add({
       severity: 'error',
@@ -212,10 +163,18 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     });
   }
 
+  copiarColaborador(colaborador: Colaborador): void {
+    this.dadosProjetoComponent.copiarColaborador(colaborador);
+  }
+
   async enviarSolicitacao(): Promise<void> {
-    this.desabilitarFormulario(true);
-    this.carregandoInformacoes.set(true);
-    await this.gravarEnvio();
+    this.validarColaboradoresGravados();
+    this.colaboradoresGravadosComponent.preencherListaColaborador(
+      this.listaColaboradoresGravados
+    );
+    // this.desabilitarFormulario(true);
+    // this.carregandoInformacoes.set(true);
+    // await this.gravarEnvio();
   }
 
   desabilitarFormulario(desabilitar: boolean): void {

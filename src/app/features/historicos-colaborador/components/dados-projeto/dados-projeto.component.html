@@ -34,12 +34,13 @@
     scrollHeight="flex"
     [scrollable]="true"
     scrollHeight="600px"
+    [frozenWidth]="'800px'"
     [expandedRowKeys]="expandedRows"
   >
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 5%"></th>
-        <th class="centro" style="width: 40%" pFrozenColumn>Nome</th>
+        <th class="centro" style="width: 200px" pFrozenColumn>Nome</th>
         <th class="centro" pFrozenColumn>Projeto</th>
         <th class="centro">Tipo Alocação</th>
         <th class="centro">Planejado</th>
@@ -65,7 +66,7 @@
             [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
           />
         </td>
-        <td style="width: 300px" pFrozenColumn>
+        <td pFrozenColumn>
           <span [ngClass]="{ 'nome-duplicado': colaborador.duplicado }">
             {{ colaborador.ANome || "" }}
           </span>
@@ -144,7 +145,7 @@
         <td class="centro">
           <p-button
             [disabled]="!colaborador.lancamentos"
-            (onClick)="colaboradorCopiado = colaborador"
+            (onClick)="copiarColaborador(colaborador)"
             autoWidth="false"
             icon="pi pi-copy"
             [style]="{ width: '75px' }"

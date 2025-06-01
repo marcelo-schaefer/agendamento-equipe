@@ -1,4 +1,12 @@
-import { Component, EventEmitter, inject, OnInit, Output } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  EventEmitter,
+  inject,
+  OnInit,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import { BehaviorSubject, firstValueFrom, from, Observable, of } from 'rxjs';
 import {
   debounceTime,
@@ -22,7 +30,11 @@ import { CorpoBusca } from '../../services/models/corpo-busca';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { CardModule } from 'primeng/card';
-import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
+import {
+  Dropdown,
+  DropdownChangeEvent,
+  DropdownModule,
+} from 'primeng/dropdown';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessagesModule } from 'primeng/messages';
@@ -52,10 +64,12 @@ import { CommonModule } from '@angular/common';
     RippleModule,
   ],
 })
-export class BuscaColaboradoresComponent implements OnInit {
+export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
   @Output()
   colaboradorSelecionadoEmit: EventEmitter<Colaborador> =
     new EventEmitter<Colaborador>();
+
+  @ViewChild('meuDropdown') dropdown!: Dropdown;
 
   private informacoesColaboradorService = inject(InformacoesColaboradorService);
 
@@ -91,11 +105,22 @@ export class BuscaColaboradoresComponent implements OnInit {
       .subscribe((colaboradores: RetornoColaborador) => {
         this.colaboradores = colaboradores.outputData.colaboradores || [];
         this.tratarColaboradores();
+        if (!this.inicializando) this.dropdown.show();
         this.isLoadingColaboradores = false;
       });
 
     this.buildForm();
     this.opcoesIniciais();
+  }
+
+  ngAfterViewInit(): void {
+    const checkLoading = () => {
+      if (this.isLoadingColaboradores) {
+        this.dropdown.hide();
+      }
+      setTimeout(checkLoading, 300);
+    };
+    checkLoading();
   }
 
   limparFormulario(): void {
