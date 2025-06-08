@@ -26,6 +26,15 @@
     </div>
   </div>
 
+  <br />
+  <button
+    pButton
+    type="button"
+    label="Filtrar Datas"
+    [disabled]="desabilitar || !listaColaboradores?.length"
+    (click)="apresentarFiltroData = true"
+  ></button>
+
   <p-table
     [value]="listaColaboradores || []"
     dataKey="id"
@@ -39,33 +48,23 @@
   >
     <ng-template pTemplate="header">
       <tr>
-        <th style="width: 5%"></th>
         <th class="centro" style="width: 200px" pFrozenColumn>Nome</th>
         <th class="centro" pFrozenColumn>Projeto</th>
         <th class="centro">Tipo Alocação</th>
         <th class="centro">Planejado</th>
         <th class="centro">Saldo</th>
-        <th class="centro">Filtro de Data</th>
+        <th class="centro">Buscar Lançamentos</th>
         <th class="centro">Preenchimento automatico</th>
         <th class="centro">Copiar</th>
         <th class="centro">Colar</th>
         <th class="centro">Excluir</th>
+        <th *ngFor="let dataColuna of listaColunas" class="centro">
+          {{ dataColuna }}
+        </th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-colaborador let-expanded="expanded">
       <tr>
-        <td pFrozenColumn>
-          <p-button
-            type="button"
-            pRipple
-            [pRowToggler]="colaborador"
-            [text]="true"
-            [rounded]="true"
-            [plain]="true"
-            [disabled]="!colaborador.lancamentos"
-            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-          />
-        </td>
         <td pFrozenColumn>
           <span [ngClass]="{ 'nome-duplicado': colaborador.duplicado }">
             {{ colaborador.ANome || "" }}
@@ -127,10 +126,11 @@
         </td>
         <td class="centro">
           <p-button
-            label="Filtrar datas"
-            (onClick)="inicializarFiltroData(colaborador)"
+            label="Buscar"
+            [disabled]="!listaColunas?.length"
+            (onClick)="buscarLancamentosDoColaborador(colaborador)"
             autoWidth="false"
-            [style]="{ width: '125px' }"
+            [style]="{ width: '175px' }"
           />
         </td>
         <td class="centro">
@@ -170,51 +170,43 @@
             [style]="{ width: '75px' }"
           />
         </td>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="rowexpansion" let-colaborador>
-      <tr>
-        <td colspan="7">
-          <div class="p-3">
-            <p-table
-              *ngIf="colaborador?.lancamentos"
-              [value]="colaborador?.lancamentos"
-              dataKey="DData"
-            >
-              <ng-template pTemplate="header">
-                <tr>
-                  <th>Data</th>
-                  <th>Tipo do Lançamento</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-porta>
-                <tr>
-                  <td>{{ porta.DData }}</td>
-                  <td
-                    [pEditableColumn]="porta.ATipoLancamento"
-                    pEditableColumnField="code"
-                  >
-                    <p-cellEditor>
-                      <ng-template pTemplate="input">
-                        <p-dropdown
-                          [options]="listaTipoAlocacao"
-                          [(ngModel)]="porta.ATipoLancamento"
-                          appendTo="body"
-                          autoWidth="false"
-                          [showClear]="true"
-                          [style]="{ width: '125px' }"
-                          [disabled]="!validaEdicaoLancamento(porta.DData)"
-                        ></p-dropdown>
-                      </ng-template>
-                      <ng-template pTemplate="output">
-                        {{ porta.ATipoLancamento || "-" }}
-                      </ng-template>
-                    </p-cellEditor>
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-          </div>
+
+        <td
+          *ngFor="let dataColuna of listaColunas"
+          class="centro"
+          [pEditableColumn]="
+            obterTipoLancamento(colaborador, dataColuna).ATipoLancamento
+          "
+          pEditableColumnField="code"
+        >
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <p-dropdown
+                [options]="listaTipoAlocacao"
+                [(ngModel)]="
+                  obterTipoLancamento(colaborador, dataColuna).ATipoLancamento
+                "
+                (ngModelChange)="
+                  gravarTipoLancamento(colaborador, dataColuna, $event)
+                "
+                appendTo="body"
+                autoWidth="false"
+                [showClear]="true"
+                [style]="{ width: '125px' }"
+                [disabled]="
+                  !validaEdicaoLancamento(
+                    obterTipoLancamento(colaborador, dataColuna).DData
+                  )
+                "
+              ></p-dropdown>
+            </ng-template>
+            <ng-template pTemplate="output">
+              {{
+                obterTipoLancamento(colaborador, dataColuna).ATipoLancamento ||
+                  "-"
+              }}
+            </ng-template>
+          </p-cellEditor>
         </td>
       </tr>
     </ng-template>
@@ -269,6 +261,14 @@
       </span>
     </div>
 
+    <div class="flex align-items-center gap-3 mb-5">
+      <p-messages
+        [(value)]="messages"
+        [enableService]="false"
+        [closable]="false"
+      />
+    </div>
+
     <div class="flex justify-content-end gap-2">
       <p-button
         label="Cancelar"
@@ -293,8 +293,8 @@
       <p-calendar
         dateFormat="dd/mm/yy"
         [(ngModel)]="dataInicioPreenchimento"
-        [minDate]="dataInicioMinimaPreenchimento"
-        [maxDate]="dataFinalMaximaPreenchimento"
+        [minDate]="dataInicio"
+        [maxDate]="dataFinal"
         appendTo="body"
       />
     </div>
@@ -303,8 +303,8 @@
       <p-calendar
         dateFormat="dd/mm/yy"
         [(ngModel)]="dataFinalPreenchimento"
-        [minDate]="dataInicioMinimaPreenchimento"
-        [maxDate]="dataFinalMaximaPreenchimento"
+        [minDate]="dataInicio"
+        [maxDate]="dataFinal"
         appendTo="body"
         [ngClass]="{
           'ng-invalid ng-dirty': erroNasDatas

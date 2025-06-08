@@ -72,12 +72,12 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
   @ViewChild('meuDropdown') dropdown!: Dropdown;
 
   private informacoesColaboradorService = inject(InformacoesColaboradorService);
+  isLoadingColaboradores$ = new BehaviorSubject<boolean>(false);
 
   constructor(private fb: FormBuilder) {}
 
   searchChange$ = new BehaviorSubject('');
   desabilitar = false;
-  isLoadingColaboradores = false;
   inicializando = false;
   isEndColaboradores = false;
   colaboradoresDesabilitados = false;
@@ -106,7 +106,7 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
         this.colaboradores = colaboradores.outputData.colaboradores || [];
         this.tratarColaboradores();
         if (!this.inicializando) this.dropdown.show();
-        this.isLoadingColaboradores = false;
+        this.isLoadingColaboradores$.next(false);
       });
 
     this.buildForm();
@@ -114,13 +114,11 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    const checkLoading = () => {
-      if (this.isLoadingColaboradores) {
+    this.isLoadingColaboradores$.subscribe((loading) => {
+      if (loading) {
         this.dropdown.hide();
       }
-      setTimeout(checkLoading, 300);
-    };
-    checkLoading();
+    });
   }
 
   limparFormulario(): void {
@@ -164,7 +162,7 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
   }
 
   searchLoadColaboradores(search: string): Observable<RetornoColaborador> {
-    this.isLoadingColaboradores = true;
+    this.isLoadingColaboradores$.next(true);
     this.cleanSelect();
     this.search = search;
     return this.loadColaboradores();
@@ -179,7 +177,7 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
 
   loadColaboradores(): Observable<RetornoColaborador> {
     if (!this.isEndColaboradores) {
-      this.isLoadingColaboradores = true;
+      this.isLoadingColaboradores$.next(true);
       const search: CorpoBusca = {
         nTop: this.top,
         nSkip: this.skip,
@@ -213,7 +211,7 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
           this.colaboradores = this.colaboradores.concat(
             colaboradores.outputData.colaboradores
           );
-          this.isLoadingColaboradores = false;
+          this.isLoadingColaboradores$.next(false);
         });
     }
   }

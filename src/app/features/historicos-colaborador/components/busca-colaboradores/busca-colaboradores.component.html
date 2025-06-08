@@ -10,7 +10,7 @@
     (ngModelChange)="onSearch($event)"
     (onChange)="selecionaColaborador($event)"
     (onScrollToBottom)="onScrollToBottom()"
-    [loading]="isLoadingColaboradores || inicializando"
+    [loading]="isLoadingColaboradores$.value || inicializando"
     [virtualScroll]="true"
     [virtualScrollItemSize]="30"
     optionLabel="ANome"

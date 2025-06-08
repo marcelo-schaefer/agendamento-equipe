@@ -30,7 +30,7 @@ import { CorpoBusca } from '../../services/models/corpo-busca';
 import { DialogModule } from 'primeng/dialog';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { BuscaLancamentos } from '../../services/models/busca-lancamentos';
-import { format } from 'date-fns';
+import { eachDayOfInterval, format } from 'date-fns';
 import { Lancamento } from '../../services/models/lancamento';
 import { BuscaColaboradoresComponent } from '../busca-colaboradores/busca-colaboradores.component';
 
@@ -90,6 +90,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
     'FS',
     'FG',
   ];
+  listaColunas: string[] = [];
   apresentarFiltroData = false;
   apresentarPreenchimento = false;
   loading = false;
@@ -108,7 +109,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
   messages: Message[] | undefined = [
     {
       severity: 'info',
-      detail: 'Salve as alterações antes de buscar novos colaboradores',
+      detail: 'Salve as alterações antes de buscar novas datas',
     },
   ];
   expandedRows: { [key: string]: boolean } = {};
@@ -193,6 +194,8 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
           : 0;
       colaborador.id = ultimoId + 1;
       this.listaColaboradores.push(colaborador);
+      this.colaboradorSelecionado = colaborador;
+      this.preencherLancamentosDoColaboradorSelecionado();
     }
   }
 
@@ -263,28 +266,6 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
     this.apresentarPreenchimento = true;
   }
 
-  aplicarFiltroData(): void {
-    if (this.dataInicio || this.dataFinal) {
-      if (this.dataInicio && !this.dataFinal) {
-        this.dataFinal = new Date();
-        this.dataFinal.setDate(this.dataInicio.getDate() + 30);
-      } else if (!this.dataInicio && this.dataFinal) {
-        this.dataInicio = new Date();
-        this.dataInicio.setDate(this.dataFinal.getDate() - 30);
-      }
-
-      if (this.dataInicio && this.dataFinal) {
-        this.erroNasDatas = !this.validarDataInicioAntesDaDataFim(
-          this.dataInicio,
-          this.dataFinal
-        );
-
-        if (!this.erroNasDatas) this.buscaLancamentos();
-      } else this.buscaLancamentos();
-    }
-    this.apresentarFiltroData = this.erroNasDatas;
-  }
-
   aplicarPreenchimento(): void {
     const colaboradorDaLista = this.listaColaboradores.find(
       (f) => f.id == this.colaboradorSelecionado.id
@@ -340,6 +321,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
 
   limparFormulario(): void {
     this.listaColaboradores = [];
+    this.listaColunas = [];
   }
 
   retornaDataMinimaPreenchimento(): Date {
@@ -358,6 +340,105 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
           ].DData
         )
       : new Date();
+  }
+
+  async buscarLancamentosDoColaborador(
+    colaborador: Colaborador
+  ): Promise<void> {
+    this.colaboradorSelecionado = colaborador;
+    this.colaboradorSelecionado.validandoCampos = true;
+    this.erroNasDatas = false;
+
+    if (
+      this.colaboradorSelecionado.projetoSelecionado &&
+      this.colaboradorSelecionado.tipoAlocacaoSelecionado
+    )
+      await this.buscaLancamentos();
+  }
+
+  aplicarFiltroData(): void {
+    if (this.dataInicio || this.dataFinal) {
+      if (this.dataInicio && !this.dataFinal) {
+        this.dataFinal = new Date();
+        this.dataFinal.setDate(this.dataInicio.getDate() + 30);
+      } else if (!this.dataInicio && this.dataFinal) {
+        this.dataInicio = new Date();
+        this.dataInicio.setDate(this.dataFinal.getDate() - 30);
+      }
+
+      if (this.dataInicio && this.dataFinal) {
+        this.erroNasDatas = !this.validarDataInicioAntesDaDataFim(
+          this.dataInicio,
+          this.dataFinal
+        );
+
+        if (!this.erroNasDatas) {
+          if (
+            this.calcularDistanciaEmDias(this.dataInicio, this.dataFinal) > 60
+          ) {
+            this.dataFinal.setDate(this.dataInicio.getDate() + 60);
+          }
+          this.preencherListaColunasPorPeriodo();
+        }
+      } else this.preencherListaColunasPorPeriodo();
+
+      this.listaColaboradores.forEach((colaborador) => {
+        this.colaboradorSelecionado = colaborador;
+        this.preencherLancamentosDoColaboradorSelecionado();
+      });
+    }
+    this.apresentarFiltroData = this.erroNasDatas;
+  }
+
+  calcularDistanciaEmDias(dataInicio: Date, dataFim: Date): number {
+    const diffMs = dataFim.getTime() - dataInicio.getTime();
+    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  }
+
+  preencherListaColunasPorPeriodo(): void {
+    if (!this.dataInicio || !this.dataFinal) {
+      this.listaColunas = [];
+      return;
+    }
+    const dias = eachDayOfInterval({
+      start: this.dataInicio,
+      end: this.dataFinal,
+    });
+    this.listaColunas = dias.map((dia) => format(dia, 'dd/MM/yyyy'));
+  }
+
+  obterTipoLancamento(colaborador: Colaborador, data: string): Lancamento {
+    if (!colaborador.lancamentos) return { DData: data, ATipoLancamento: null };
+    const lanc = colaborador.lancamentos.find((l) => l.DData === data);
+    return lanc || { DData: data, ATipoLancamento: null };
+  }
+
+  gravarTipoLancamento(
+    colaborador: Colaborador,
+    data: string,
+    tipoLancamento: string
+  ): void {
+    const lanc = colaborador.lancamentos.find((l) => l.DData === data);
+    if (lanc) lanc.ATipoLancamento = tipoLancamento;
+  }
+
+  preencherLancamentosDoColaboradorSelecionado(): void {
+    if (!this.colaboradorSelecionado || !this.listaColunas) return;
+    if (!this.colaboradorSelecionado.lancamentos) {
+      this.colaboradorSelecionado.lancamentos = [];
+    }
+
+    this.listaColunas.forEach((dataStr) => {
+      const existe = this.colaboradorSelecionado.lancamentos.some(
+        (lanc) => lanc.DData === dataStr
+      );
+      if (!existe) {
+        this.colaboradorSelecionado.lancamentos.push({
+          DData: dataStr,
+          ATipoLancamento: null,
+        });
+      }
+    });
   }
 
   validaEdicaoLancamento(data: string | Date): boolean {
