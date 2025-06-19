@@ -14,6 +14,10 @@
   font-weight: bold;
 }
 
+.texto-vermelho {
+  color: red;
+}
+
 td span {
   white-space: nowrap;
   overflow: hidden;

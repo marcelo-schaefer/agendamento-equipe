@@ -82,6 +82,7 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
   isEndColaboradores = false;
   colaboradoresDesabilitados = false;
   search = '';
+  aPapelAdm = 'N';
   top = 10;
   skip = 0;
   colaborador: Colaborador;
@@ -110,7 +111,6 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
       });
 
     this.buildForm();
-    this.opcoesIniciais();
   }
 
   ngAfterViewInit(): void {
@@ -119,6 +119,10 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
         this.dropdown.hide();
       }
     });
+  }
+
+  preencherPapelAdm(papelAdm: string): void {
+    this.aPapelAdm = papelAdm || 'N';
   }
 
   limparFormulario(): void {
@@ -182,6 +186,7 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
         nTop: this.top,
         nSkip: this.skip,
         aQuery: this.search,
+        aPapelAdm: this.aPapelAdm,
       };
       const colaboradores =
         this.informacoesColaboradorService.obterListaColaboradores(search);
@@ -233,6 +238,7 @@ export class BuscaColaboradoresComponent implements OnInit, AfterViewInit {
       );
       this.tratarColaboradores();
       this.inicializando = false;
+      this.isLoadingColaboradores$.next(false);
     });
   }
 

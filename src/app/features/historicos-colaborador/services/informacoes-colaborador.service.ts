@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, retry } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 import { Colaborador, RetornoColaborador } from './models/colaborador.model';
@@ -10,6 +10,8 @@ import { RetornoProjeto } from './models/projeto.model';
 import { CorpoBusca } from './models/corpo-busca';
 import { BuscaLancamentos } from './models/busca-lancamentos';
 import { RetornoLancamento } from './models/lancamento';
+import { RetornoPapelAdm } from './models/papel-adm';
+import { TokenService } from '../../../core/services/token.service';
 
 @Injectable({
   providedIn: 'root',
@@ -30,28 +32,33 @@ export class InformacoesColaboradorService {
   };
 
   private http = inject(HttpClient);
+  private tokenService = inject(TokenService);
 
   public obterListaProjetos(): Observable<RetornoProjeto> {
-    return this.http.post<RetornoProjeto>(environment.plugin.invoke, {
-      ...this.basePayload,
-      inputData: {
-        ...this.basePayload.inputData,
-        port: 'buscaProjetos',
-      },
-    });
+    return this.http
+      .post<RetornoProjeto>(environment.plugin.invoke, {
+        ...this.basePayload,
+        inputData: {
+          ...this.basePayload.inputData,
+          port: 'buscaProjetos',
+        },
+      })
+      .pipe(retry(3));
   }
 
   public obterListaColaboradores(
     body: CorpoBusca
   ): Observable<RetornoColaborador> {
-    return this.http.post<RetornoColaborador>(environment.plugin.invoke, {
-      ...this.basePayload,
-      inputData: {
-        ...this.basePayload.inputData,
-        port: 'buscaColaboradores',
-        ...body,
-      },
-    });
+    return this.http
+      .post<RetornoColaborador>(environment.plugin.invoke, {
+        ...this.basePayload,
+        inputData: {
+          ...this.basePayload.inputData,
+          port: 'buscaColaboradores',
+          ...body,
+        },
+      })
+      .pipe(retry(3));
   }
 
   public buscaLancamentos(
@@ -65,6 +72,20 @@ export class InformacoesColaboradorService {
         ...body,
       },
     });
+  }
+
+  public verificaPapel(): Observable<RetornoPapelAdm> {
+    const aNomeUsuario = this.tokenService.username;
+    return this.http
+      .post<RetornoPapelAdm>(environment.plugin.invoke, {
+        ...this.basePayload,
+        inputData: {
+          ...this.basePayload.inputData,
+          port: 'verificaPapelSolicitante',
+          aNomeUsuario: aNomeUsuario,
+        },
+      })
+      .pipe(retry(3));
   }
 
   public gravarEnvio(body: Persistencia): Observable<RetornoGravacao> {

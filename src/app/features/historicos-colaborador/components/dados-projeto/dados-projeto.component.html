@@ -1,7 +1,7 @@
 <p-card>
   <p-toast />
   <ng-template pTemplate="title">
-    <h2>Aegnda da Equipe</h2>
+    <h2>Agenda da Equipe</h2>
   </ng-template>
 
   <div class="mb-4">
@@ -51,8 +51,8 @@
         <th class="centro" style="width: 200px" pFrozenColumn>Nome</th>
         <th class="centro" pFrozenColumn>Projeto</th>
         <th class="centro">Tipo Alocação</th>
-        <th class="centro">Planejado</th>
-        <th class="centro">Saldo</th>
+        <th class="centro" style="width: 100px">Planejado</th>
+        <th class="centro" style="width: 100px">Saldo</th>
         <th class="centro">Buscar Lançamentos</th>
         <th class="centro">Preenchimento automatico</th>
         <th class="centro">Copiar</th>
@@ -72,8 +72,10 @@
         </td>
         <td pFrozenColumn>
           <p-dropdown
-            [options]="listaProjetos"
+            [options]="projetosFiltrados"
             [(ngModel)]="colaborador.projetoSelecionado"
+            [editable]="true"
+            (input)="projetosFiltrados = filtrarProjetos($event)"
             optionLabel="ANome"
             placeholder="Selecione um projeto"
             appendTo="body"
@@ -119,10 +121,15 @@
           </div>
         </td>
         <td class="centro">
-          {{ validaPlanejado(colaborador) }}
+          <p [style]="{ width: '100px' }">{{ validaPlanejado(colaborador) }}</p>
         </td>
-        <td class="centro">
-          {{ validaSaldo(colaborador) }}
+        <td
+          class="centro"
+          [ngClass]="{
+            'texto-vermelho': verificaSaldoNegativo(validaSaldo(colaborador))
+          }"
+        >
+          <p [style]="{ width: '100px' }">{{ validaSaldo(colaborador) }}</p>
         </td>
         <td class="centro">
           <p-button

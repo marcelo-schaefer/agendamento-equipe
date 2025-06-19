@@ -73,6 +73,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
   private informacoesColaboradorService = inject(InformacoesColaboradorService);
 
   listaProjetos: Projeto[] = [];
+  projetosFiltrados: Projeto[] = [];
   listaColaboradores: Colaborador[] = [];
   colaboradorCopiado: Colaborador;
   listaAlocaacoFullTime: string[] = ['Full-Time', 'Não Full-Time'];
@@ -129,12 +130,21 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
     this.expandedRows = {};
   }
 
+  preencherPapelAdm(papelAdm: string): void {
+    this.buscaColaboradoresComponent?.preencherPapelAdm(papelAdm);
+  }
+
+  geraOpcoesIniciais(): void {
+    this.buscaColaboradoresComponent.opcoesIniciais();
+  }
+
   carregarTabela(loading: boolean): void {
     this.loading = loading;
   }
 
-  preencheListaProejtos(projetos: Projeto[]): void {
+  preencheListaProjetos(projetos: Projeto[]): void {
     this.listaProjetos = projetos;
+    this.projetosFiltrados = this.listaProjetos;
   }
 
   desabilitarFormulario(desabilitar: boolean): void {
@@ -243,6 +253,10 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
           (f) => f.NId == colaborador.projetoSelecionado.NId
         )?.NDesvio || '-';
     return saldo;
+  }
+
+  verificaSaldoNegativo(desvio: string): boolean {
+    return desvio.includes('-') && desvio.includes(':');
   }
 
   inicializarFiltroData(colaborador: Colaborador): void {
@@ -420,6 +434,13 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
   ): void {
     const lanc = colaborador.lancamentos.find((l) => l.DData === data);
     if (lanc) lanc.ATipoLancamento = tipoLancamento;
+  }
+
+  filtrarProjetos(event: Event): Projeto[] {
+    const query = (event as CustomEvent).detail.query.toLowerCase();
+    return this.listaProjetos.filter((proj) =>
+      proj.ANome.toLowerCase().includes(query)
+    );
   }
 
   preencherLancamentosDoColaboradorSelecionado(): void {

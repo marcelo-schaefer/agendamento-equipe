@@ -30,6 +30,7 @@ import { CorpoBusca } from './services/models/corpo-busca';
 import { ButtonModule } from 'primeng/button';
 import { BuscaColaboradoresComponent } from './components/busca-colaboradores/busca-colaboradores.component';
 import { ColaboradoresGravadosComponent } from './components/colaboradores-gravados/colaboradores-gravados.component';
+import { PapelAdm } from './services/models/papel-adm';
 
 @Component({
   selector: 'app-historicos-colaborador',
@@ -65,6 +66,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   listaColaboradores!: Colaborador[];
   listaColaboradoresGravados: Colaborador[] = [];
   projetoSelecionado!: Projeto;
+  papelSolicitante!: PapelAdm;
 
   constructor(private messageService: MessageService) {}
 
@@ -74,6 +76,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
+    await this.inicializarVerificacaoPapel();
     await this.inicializarBuscaProjetos();
     this.carregandoInformacoes.set(false);
   }
@@ -82,10 +85,18 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     this.dadosProjetoComponent.limparFormulario();
   }
 
+  async inicializarVerificacaoPapel(): Promise<void> {
+    await this.verificaPapelSolicitante();
+    this.dadosProjetoComponent.preencherPapelAdm(
+      this.papelSolicitante?.APapelAdmAgendaEquipe || 'N'
+    );
+    this.dadosProjetoComponent.geraOpcoesIniciais();
+  }
+
   async inicializarBuscaProjetos(): Promise<void> {
     await this.buscaProjetos();
     this.tratarProjetos();
-    this.dadosProjetoComponent.preencheListaProejtos(this.listaProjetos);
+    this.dadosProjetoComponent.preencheListaProjetos(this.listaProjetos);
   }
 
   async reinicializarComponente(): Promise<void> {
@@ -140,6 +151,27 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
       console.error(error);
       this.notificarErro(
         'Erro ao buscar a lista de projetos, tente mais tarde ou contate o admnistrador. ' +
+          error
+      );
+      this.carregandoInformacoes.set(false);
+    }
+  }
+
+  async verificaPapelSolicitante(): Promise<void> {
+    try {
+      const projetos = await firstValueFrom(
+        this.informacoesColaboradorService.verificaPapel()
+      );
+      if (projetos.outputData.message) {
+        this.notificarErro(
+          'Erro ao identificar papeis do solicitante, a procura de colaboradores seguirá pela a hierarquia, ' +
+            projetos.outputData.message
+        );
+      } else this.papelSolicitante = projetos.outputData;
+    } catch (error) {
+      console.error(error);
+      this.notificarErro(
+        'Erro ao identificar papeis do solicitante, a procura de colaboradores seguirá pela a hierarquia, tente mais tarde ou contate o admnistrador. ' +
           error
       );
       this.carregandoInformacoes.set(false);
