@@ -33,6 +33,8 @@ import { BuscaLancamentos } from '../../services/models/busca-lancamentos';
 import { eachDayOfInterval, format } from 'date-fns';
 import { Lancamento } from '../../services/models/lancamento';
 import { BuscaColaboradoresComponent } from '../busca-colaboradores/busca-colaboradores.component';
+import { PanelModule } from 'primeng/panel';
+import { LegendaSiglas } from '../../services/models/legenda-siglas';
 
 @Component({
   selector: 'app-dados-projeto',
@@ -58,6 +60,7 @@ import { BuscaColaboradoresComponent } from '../busca-colaboradores/busca-colabo
     DialogModule,
     FloatLabelModule,
     BuscaColaboradoresComponent,
+    PanelModule,
   ],
 })
 export class DadosProjetoComponent implements OnInit, AfterViewInit {
@@ -78,18 +81,18 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
   colaboradorCopiado: Colaborador;
   listaAlocaacoFullTime: string[] = ['Full-Time', 'Não Full-Time'];
   listaTipoAlocacao = [
-    'C',
-    'E',
-    'CC',
-    'EC',
+    'Cam',
+    'Esc',
+    'CamP',
+    'EscP',
     'CH',
-    'FE',
-    'SE',
+    'Fe',
     'P',
     'LM',
     'FD',
     'FS',
-    'FG',
+    'RS',
+    'DSR',
   ];
   listaColunas: string[] = [];
   apresentarFiltroData = false;
@@ -106,6 +109,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
   alocacaoSelecionada: string;
   colaboradorParaBusca: string;
   colaboradorSelecionado: Colaborador;
+  listaLegendas: LegendaSiglas[] = [];
 
   messages: Message[] | undefined = [
     {
@@ -119,6 +123,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     console.log('Inicializando componente');
+    this.criaListaLegendaSiglas();
   }
 
   ngAfterViewInit(): void {
@@ -523,6 +528,104 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
       );
     }
     return valido;
+  }
+
+  retornaCorConformeSigla(
+    colaborador: Colaborador,
+    dataColuna: string
+  ): string {
+    const lancamento = this.obterTipoLancamento(colaborador, dataColuna);
+    const legenda = this.listaLegendas.find(
+      (l) => l.sigla === lancamento.ATipoLancamento
+    );
+    return lancamento.AFeriado == 'S'
+      ? 'background: lightblue;'
+      : legenda
+      ? legenda.cor
+      : 'color: black;';
+  }
+
+  criaListaLegendaSiglas(): void {
+    this.listaLegendas = [
+      {
+        descricao: 'Atividade de campo confirmada',
+        sigla: 'Cam',
+        formatacao: 'Fonte verde negrito',
+        cor: 'color: green; font-weight: bold;',
+      },
+      {
+        descricao: 'Atividade de escritório confirmada',
+        sigla: 'Esc',
+        formatacao: 'Fonte verde negrito',
+        cor: 'color: green; font-weight: bold;',
+      },
+      {
+        descricao: 'Atividade de campo planejada/ a confirmar',
+        sigla: 'CamP',
+        formatacao: 'Fonte em vermelho',
+        cor: 'color: red;',
+      },
+      {
+        descricao: 'Atividade de escritório planejada/ a confirmar',
+        sigla: 'EscP',
+        formatacao: 'Fonte em vermelho',
+        cor: 'color: red;',
+      },
+      {
+        descricao: 'Compensação de Horas',
+        sigla: 'CH',
+        formatacao: 'Fonte em preto/padrão',
+        cor: 'color: black;',
+      },
+      {
+        descricao: 'Férias',
+        sigla: 'Fe',
+        formatacao: 'Fonte em preto/padrão',
+        cor: 'color: black;',
+      },
+      {
+        descricao: 'Não agendar campo',
+        sigla: 'P',
+        formatacao: 'Fonte em preto/padrão',
+        cor: 'color: black;',
+      },
+      {
+        descricao: 'Licença Médica/Maternidade',
+        sigla: 'LM',
+        formatacao: 'Fonte em preto/padrão',
+        cor: 'color: black;',
+      },
+      {
+        descricao: 'Feriado',
+        sigla: 'FD',
+        formatacao: 'Fonte em preto e preenchimento em cinza',
+        cor: 'color: black; background-color: gray;',
+      },
+      {
+        descricao: 'Final de Semana (sábado ou domingo)',
+        sigla: 'FS',
+        formatacao: 'Fonte em preto e preenchimento em cinza',
+        cor: 'color: black; background-color: gray;',
+      },
+      {
+        descricao: 'Recesso Sete',
+        sigla: 'RS',
+        formatacao: 'Fonte em preto e preenchimento em cinza',
+        cor: 'color: black; background-color: gray;',
+      },
+      {
+        descricao: 'Descanso Semanal Remunerado',
+        sigla: 'DSR',
+        formatacao: 'Fonte em preto e preenchimento em cinza',
+        cor: 'color: black; background-color: gray;',
+      },
+      {
+        descricao: 'Feriados e Finais de Semana',
+        sigla: ' - ',
+        formatacao: 'Fonte em preto e preenchimento em azul claro',
+        cor: 'color: black; background: lightblue;',
+      },
+    ];
   }
 
   enviar(): void {
