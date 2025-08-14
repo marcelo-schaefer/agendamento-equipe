@@ -1,4 +1,3 @@
-import { DataApontamento } from './data-apontamento';
 import { Lancamento } from './lancamento';
 import { Projeto } from './projeto.model';
 

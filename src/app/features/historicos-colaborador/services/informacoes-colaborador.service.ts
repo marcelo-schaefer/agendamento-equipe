@@ -12,6 +12,10 @@ import { BuscaLancamentos } from './models/busca-lancamentos';
 import { RetornoLancamento } from './models/lancamento';
 import { RetornoPapelAdm } from './models/papel-adm';
 import { TokenService } from '../../../core/services/token.service';
+import {
+  BodyColaboradorePorData,
+  RetornoColaboradoresPorData,
+} from './models/colaboradorePorData';
 
 @Injectable({
   providedIn: 'root',
@@ -72,6 +76,22 @@ export class InformacoesColaboradorService {
         ...body,
       },
     });
+  }
+
+  public buscaColaboradoresPorDatas(
+    body: BodyColaboradorePorData
+  ): Observable<RetornoColaboradoresPorData> {
+    return this.http.post<RetornoColaboradoresPorData>(
+      environment.plugin.invoke,
+      {
+        ...this.basePayload,
+        inputData: {
+          ...this.basePayload.inputData,
+          port: 'buscarColaboradoresEmProjetosPorDatas',
+          ...body,
+        },
+      }
+    );
   }
 
   public verificaPapel(): Observable<RetornoPapelAdm> {

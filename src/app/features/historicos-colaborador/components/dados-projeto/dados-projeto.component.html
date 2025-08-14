@@ -20,7 +20,7 @@
         pButton
         type="button"
         label="Adicionar"
-        [disabled]="desabilitar"
+        [disabled]="desabilitar || loading"
         (click)="adicionarColaboradorSelecionado()"
       ></button>
     </div>

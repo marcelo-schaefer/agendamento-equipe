@@ -4,56 +4,109 @@
     <h2>Agendamentos Gravados</h2>
   </ng-template>
 
-  <button
-    pButton
-    type="button"
-    label="Visualização de Datas"
-    [disabled]="desabilitar"
-    (click)="apresentarFiltroData = true"
-  ></button>
+  <div class="mb-4">
+    <div
+      class="form-responsive"
+      style="display: flex; gap: 0.5rem; align-items: start"
+    >
+      <button
+        pButton
+        type="button"
+        label="Visualização de Datas"
+        [disabled]="desabilitar"
+        (click)="apresentarFiltroData = true"
+      ></button>
+
+      <app-busca-colaboradores
+        [style.width]="'400px'"
+      ></app-busca-colaboradores>
+      <button
+        pButton
+        type="button"
+        label="Adicionar"
+        [disabled]="desabilitar || loading"
+        (click)="buscarColaboradorSelecionado()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Buscar Todos"
+        [disabled]="desabilitar || loading"
+        (click)="buscarTodosColaboradores()"
+      ></button>
+    </div>
+  </div>
+
+  <br />
 
   <p-table
-    [value]="listaColaboradores || []"
-    dataKey="id"
+    [value]="listaColaboradoresPorData || []"
+    dataKey="NMatricula"
     [tableStyle]="{ 'min-width': '50rem' }"
     scrollHeight="flex"
     [frozenWidth]="'700px'"
     [scrollable]="true"
     scrollHeight="600px"
+    [loading]="loading"
   >
     <ng-template pTemplate="header">
       <tr>
-        <th class="centro" style="width: 300px" pFrozenColumn>Nome</th>
-        <th class="centro" style="width: 200px" pFrozenColumn>Projeto</th>
-        <th class="centro" style="width: 200px" pFrozenColumn>Tipo Alocação</th>
-        <th class="centro" style="width: 100px" pFrozenColumn>Copiar</th>
-        <th *ngFor="let dataColuna of listaColunas" class="centro">
-          {{ dataColuna }}
-        </th>
+        <th></th>
+        <th style="width: 100%">Nome</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-colaborador let-expanded="expanded">
       <tr>
-        <td pFrozenColumn style="width: 300px">
-          {{ colaborador.ANome || "" }}
-        </td>
-        <td pFrozenColumn style="width: 200px">
-          {{ colaborador.projetoSelecionado.ANome || "" }}
-        </td>
-        <td pFrozenColumn style="width: 200px">
-          {{ colaborador.tipoAlocacaoSelecionado || "" }}
-        </td>
-        <td class="centro" pFrozenColumn style="width: 100px">
+        <td>
           <p-button
-            [disabled]="!colaborador.lancamentos"
-            (onClick)="copiarColaborador(colaborador)"
-            autoWidth="false"
-            icon="pi pi-copy"
-            [style]="{ width: '75px' }"
+            type="button"
+            pRipple
+            [pRowToggler]="colaborador"
+            [text]="true"
+            [rounded]="true"
+            [plain]="true"
+            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
           />
         </td>
-        <td *ngFor="let dataColuna of listaColunas" class="centro">
-          {{ obterTipoLancamento(colaborador, dataColuna) }}
+        <td style="width: 100%">
+          {{ colaborador.ANome || "" }}
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="rowexpansion" let-colaborador>
+      <tr>
+        <td colspan="7">
+          <div class="p-3">
+            <p-table [value]="colaborador.projetos" dataKey="ANome">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th></th>
+                  <th class="centro">Projeto</th>
+                  <th class="centro">Tipo Alocação</th>
+                  <th *ngFor="let dataColuna of listaColunas" class="centro">
+                    {{ dataColuna }}
+                  </th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-projetos>
+                <tr>
+                  <td></td>
+                  <td pFrozenColumn style="width: 200px">
+                    {{ projetos.ANome || "" }}
+                  </td>
+                  <td pFrozenColumn style="width: 200px">
+                    {{
+                      projetos.AFullTime == "S" ? "Full-Time" : "Não Full-Time"
+                    }}
+                  </td>
+                  <td *ngFor="let dataColuna of listaColunas" class="centro">
+                    {{ obterTipoLancamento(projetos, dataColuna) }}
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
         </td>
       </tr>
     </ng-template>

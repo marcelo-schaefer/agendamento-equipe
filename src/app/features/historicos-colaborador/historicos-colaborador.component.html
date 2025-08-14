@@ -5,7 +5,7 @@
     (enviarSolicitacao)="enviarSolicitacao()"
   ></app-dados-projeto>
   <app-colaboradores-gravados
-    [hidden]="listaColaboradoresGravados.length < 1"
+    [hidden]="listaColaboradoresGravados.length > 10"
     (colaboradorEmitter)="copiarColaborador($event)"
   ></app-colaboradores-gravados>
 </app-loading>

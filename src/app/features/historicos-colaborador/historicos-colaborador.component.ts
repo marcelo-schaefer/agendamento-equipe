@@ -72,6 +72,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.carregandoInformacoes.set(true);
+    this.desabilitarFormulario(true);
     this.inicializaComponente();
   }
 
@@ -79,6 +80,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     await this.inicializarVerificacaoPapel();
     await this.inicializarBuscaProjetos();
     this.carregandoInformacoes.set(false);
+    this.desabilitarFormulario(false);
   }
 
   inicializaComponente(): void {
@@ -90,7 +92,11 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     this.dadosProjetoComponent.preencherPapelAdm(
       this.papelSolicitante?.APapelAdmAgendaEquipe || 'N'
     );
+    this.colaboradoresGravadosComponent.preencherPapelAdm(
+      this.papelSolicitante?.APapelAdmAgendaEquipe || 'N'
+    );
     this.dadosProjetoComponent.geraOpcoesIniciais();
+    this.colaboradoresGravadosComponent.geraOpcoesIniciais();
   }
 
   async inicializarBuscaProjetos(): Promise<void> {
@@ -207,6 +213,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
 
   desabilitarFormulario(desabilitar: boolean): void {
     this.dadosProjetoComponent.desabilitarFormulario(desabilitar);
+    this.colaboradoresGravadosComponent.desabilitarFormulario(desabilitar);
   }
 
   async gravarEnvio(): Promise<void> {

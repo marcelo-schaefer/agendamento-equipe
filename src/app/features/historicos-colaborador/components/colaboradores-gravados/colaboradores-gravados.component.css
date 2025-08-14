@@ -18,3 +18,9 @@ td {
 .centro {
   text-align: center;
 }
+
+.chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
