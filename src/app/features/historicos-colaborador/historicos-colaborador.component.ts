@@ -107,13 +107,13 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
 
   async reinicializarComponente(): Promise<void> {
     this.validarColaboradoresGravados();
-    this.colaboradoresGravadosComponent.preencherListaColaborador(
-      this.listaColaboradoresGravados
-    );
     this.carregandoInformacoes.set(true);
     this.dadosProjetoComponent.limparFormulario();
     this.carregandoInformacoes.set(false);
     this.desabilitarFormulario(false);
+    this.colaboradoresGravadosComponent.preencherListaColaborador(
+      this.listaColaboradoresGravados
+    );
   }
 
   validarColaboradoresGravados(): void {

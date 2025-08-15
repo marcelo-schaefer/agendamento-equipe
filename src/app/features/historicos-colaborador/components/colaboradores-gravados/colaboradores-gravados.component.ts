@@ -68,7 +68,6 @@ export class ColaboradoresGravadosComponent {
 
   private informacoesColaboradorService = inject(InformacoesColaboradorService);
 
-  listaColaboradores: Colaborador[] = [];
   listaColaboradoresPorData: ColaboradoresPorData[] = [];
   listaColunas: string[];
   desabilitar = false;
@@ -83,18 +82,22 @@ export class ColaboradoresGravadosComponent {
 
   constructor(private messageService: MessageService) {}
 
-  preencherListaColaborador(lista: Colaborador[]): void {
-    this.listaColaboradores = this.listaColaboradores.concat(lista);
-  }
+  async preencherListaColaborador(lista: Colaborador[]): Promise<void> {
+    this.listaColaboradoresPorData = this.listaColaboradoresPorData.filter(
+      (colabData) =>
+        !lista.some(
+          (colab) =>
+            colabData.NEmpresa === colab.NEmpresa &&
+            colabData.NTipoColaborador === colab.NTipoColaborador &&
+            colabData.NMatricula === colab.NMatricula
+        )
+    );
 
-  onRemove(event: any) {
-    // já é removido automaticamente do ngModel, você pode logar ou agir aqui
-    console.log('Removido:', event.value);
-  }
-
-  onAdd(event: any) {
-    // já é removido automaticamente do ngModel, você pode logar ou agir aqui
-    console.log('Removido:', event.value);
+    await this.buscaDadosColaboradores(
+      this.montaCorpoBuscaComColaboradores(
+        lista.map((colab) => this.converteColaboradorParaBusca(colab))
+      )
+    );
   }
 
   aplicarFiltroData(): void {
@@ -155,6 +158,7 @@ export class ColaboradoresGravadosComponent {
         this.listaColaboradoresPorData = this.listaColaboradoresPorData.concat(
           this.tratarRetorno(colaboradores.outputData.colaboradores)
         );
+        this.ordenaLista();
       }
     } catch (error) {
       console.error(error);
@@ -273,6 +277,12 @@ export class ColaboradoresGravadosComponent {
     });
 
     return listaColaboradores;
+  }
+
+  ordenaLista(): void {
+    this.listaColaboradoresPorData.sort((a, b) =>
+      a.NMatricula.localeCompare(b.NMatricula)
+    );
   }
 
   montaCorpoBuscaTodos(): BodyColaboradorePorData {

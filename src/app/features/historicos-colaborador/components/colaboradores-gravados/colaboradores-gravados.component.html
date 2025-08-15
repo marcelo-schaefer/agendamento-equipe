@@ -30,7 +30,7 @@
       <button
         pButton
         type="button"
-        label="Buscar Todos"
+        [label]="'Buscar Todos' + (nSkip > 0 ? ' (+10)' : '')"
         [disabled]="desabilitar || loading"
         (click)="buscarTodosColaboradores()"
       ></button>
@@ -48,6 +48,7 @@
     [scrollable]="true"
     scrollHeight="600px"
     [loading]="loading"
+    *ngIf="listaColaboradoresPorData.length > 0 || loading"
   >
     <ng-template pTemplate="header">
       <tr>
