@@ -31,6 +31,7 @@ import { ButtonModule } from 'primeng/button';
 import { BuscaColaboradoresComponent } from './components/busca-colaboradores/busca-colaboradores.component';
 import { ColaboradoresGravadosComponent } from './components/colaboradores-gravados/colaboradores-gravados.component';
 import { PapelAdm } from './services/models/papel-adm';
+import { TokenService } from '../../core/services/token.service';
 
 @Component({
   selector: 'app-historicos-colaborador',
@@ -58,6 +59,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   colaboradoresGravadosComponent: ColaboradoresGravadosComponent | undefined;
 
   private informacoesColaboradorService = inject(InformacoesColaboradorService);
+  private tokenService = inject(TokenService);
 
   protected informacoesColaborador = signal<Colaborador | undefined>(undefined);
   carregandoInformacoes = signal(false);
@@ -70,9 +72,17 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
 
   constructor(private messageService: MessageService) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.carregandoInformacoes.set(true);
     this.desabilitarFormulario(true);
+
+    while (
+      !this.tokenService.token$.value?.accessToken ||
+      !this.tokenService.username
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      this.tokenService.carregarToken();
+    }
     this.inicializaComponente();
   }
 

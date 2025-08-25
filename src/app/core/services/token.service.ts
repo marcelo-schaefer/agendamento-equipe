@@ -15,7 +15,7 @@ import {
   providedIn: 'root',
 })
 export class TokenService {
-  private token$ = new BehaviorSubject<Token | undefined>(undefined);
+  token$ = new BehaviorSubject<Token | undefined>(undefined);
   username = '';
 
   carregarToken(): Promise<void> {
