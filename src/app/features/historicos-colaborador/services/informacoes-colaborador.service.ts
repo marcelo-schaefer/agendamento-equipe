@@ -16,6 +16,7 @@ import {
   BodyColaboradorePorData,
   RetornoColaboradoresPorData,
 } from './models/colaboradorePorData';
+import { RetornoFeriado } from './models/feriado';
 
 @Injectable({
   providedIn: 'root',
@@ -60,6 +61,18 @@ export class InformacoesColaboradorService {
           ...this.basePayload.inputData,
           port: 'buscaColaboradores',
           ...body,
+        },
+      })
+      .pipe(retry(3));
+  }
+
+  public obterListaFeriados(): Observable<RetornoFeriado> {
+    return this.http
+      .post<RetornoFeriado>(environment.plugin.invoke, {
+        ...this.basePayload,
+        inputData: {
+          ...this.basePayload.inputData,
+          port: 'buscaFeriados',
         },
       })
       .pipe(retry(3));

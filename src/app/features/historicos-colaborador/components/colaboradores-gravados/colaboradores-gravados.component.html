@@ -53,7 +53,8 @@
     <ng-template pTemplate="header">
       <tr>
         <th></th>
-        <th style="width: 100%">Nome</th>
+        <th style="width: 90%">Nome</th>
+        <th style="width: 10%">Excluir</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-colaborador let-expanded="expanded">
@@ -69,8 +70,17 @@
             [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
           />
         </td>
-        <td style="width: 100%">
+        <td style="width: 90%">
           {{ colaborador.ANome || "" }}
+        </td>
+        <td style="width: 10%">
+          <p-button
+            icon="pi pi-times"
+            [rounded]="true"
+            [text]="true"
+            severity="danger"
+            (click)="excluirColaboradorDaLista(colaborador)"
+          />
         </td>
       </tr>
     </ng-template>
@@ -85,7 +95,11 @@
                   <th></th>
                   <th class="centro">Projeto</th>
                   <th class="centro">Tipo Alocação</th>
-                  <th *ngFor="let dataColuna of listaColunas" class="centro">
+                  <th
+                    *ngFor="let dataColuna of listaColunas"
+                    class="centro"
+                    [style.color]="retornaCorFeriadoFinalSemana(dataColuna)"
+                  >
                     {{ dataColuna }}
                   </th>
                 </tr>
@@ -101,8 +115,15 @@
                       projetos.AFullTime == "S" ? "Full-Time" : "Não Full-Time"
                     }}
                   </td>
-                  <td *ngFor="let dataColuna of listaColunas" class="centro">
-                    {{ obterTipoLancamento(projetos, dataColuna) }}
+                  <td
+                    *ngFor="let dataColuna of listaColunas"
+                    class="centro"
+                    [style]="retornaCorConformeSigla(projetos, dataColuna)"
+                  >
+                    {{
+                      obterTipoLancamento(projetos, dataColuna)
+                        .ATipoLancamento || "-"
+                    }}
                   </td>
                 </tr>
               </ng-template>

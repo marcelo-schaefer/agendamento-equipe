@@ -35,6 +35,7 @@ import { Lancamento } from '../../services/models/lancamento';
 import { BuscaColaboradoresComponent } from '../busca-colaboradores/busca-colaboradores.component';
 import { PanelModule } from 'primeng/panel';
 import { LegendaSiglas } from '../../services/models/legenda-siglas';
+import { Feriado } from '../../services/models/feriado';
 
 @Component({
   selector: 'app-dados-projeto',
@@ -110,6 +111,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
   colaboradorParaBusca: string;
   colaboradorSelecionado: Colaborador;
   listaLegendas: LegendaSiglas[] = [];
+  feriados: Feriado[] = [];
 
   messages: Message[] | undefined = [
     {
@@ -137,6 +139,10 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
 
   preencherPapelAdm(papelAdm: string): void {
     this.buscaColaboradoresComponent?.preencherPapelAdm(papelAdm);
+  }
+
+  preencherFeriados(feriados: Feriado[]): void {
+    this.feriados = feriados;
   }
 
   geraOpcoesIniciais(): void {
@@ -530,6 +536,31 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
     return valido;
   }
 
+  retornaCorFeriadoFinalSemana(data: string): string {
+    return this.retornaCorFinalSemana(data) || this.retornaCorFeriado(data);
+  }
+
+  retornaCorFeriado(data: string): string {
+    let cor = '';
+    this.feriados.forEach((feriado) => {
+      if (feriado.data === data) {
+        cor = 'lightblue';
+      }
+    });
+    return cor;
+  }
+
+  retornaCorFinalSemana(dataStr: string): string {
+    const [dia, mes, ano] = dataStr.split('/').map(Number);
+    const data = new Date(ano, mes - 1, dia);
+    const diaSemana = data.getDay(); // 0 = domingo, 6 = sábado
+
+    if (diaSemana === 0 || diaSemana === 6) {
+      return 'lightblue';
+    }
+    return '';
+  }
+
   retornaCorConformeSigla(
     colaborador: Colaborador,
     dataColuna: string
@@ -538,11 +569,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
     const legenda = this.listaLegendas.find(
       (l) => l.sigla === lancamento.ATipoLancamento
     );
-    return lancamento.AFeriado == 'S'
-      ? 'background: lightblue;'
-      : legenda
-      ? legenda.cor
-      : 'color: black;';
+    return legenda ? legenda.cor : 'color: black;';
   }
 
   criaListaLegendaSiglas(): void {
@@ -596,7 +623,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
         cor: 'color: black;',
       },
       {
-        descricao: 'Feriado',
+        descricao: 'Feriados Municipais e Estaduais',
         sigla: 'FD',
         formatacao: 'Fonte em preto e preenchimento em cinza',
         cor: 'color: black; background-color: gray;',
@@ -622,8 +649,8 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
       {
         descricao: 'Feriados e Finais de Semana',
         sigla: ' - ',
-        formatacao: 'Fonte em preto e preenchimento em azul claro',
-        cor: 'color: black; background: lightblue;',
+        formatacao: 'Fonte em azul claro',
+        cor: '',
       },
     ];
   }

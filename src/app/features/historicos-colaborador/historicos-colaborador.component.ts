@@ -32,6 +32,7 @@ import { BuscaColaboradoresComponent } from './components/busca-colaboradores/bu
 import { ColaboradoresGravadosComponent } from './components/colaboradores-gravados/colaboradores-gravados.component';
 import { PapelAdm } from './services/models/papel-adm';
 import { TokenService } from '../../core/services/token.service';
+import { Feriado } from './services/models/feriado';
 
 @Component({
   selector: 'app-historicos-colaborador',
@@ -67,6 +68,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   listaProjetos!: Projeto[];
   listaColaboradores!: Colaborador[];
   listaColaboradoresGravados: Colaborador[] = [];
+  feriados: Feriado[] = [];
   projetoSelecionado!: Projeto;
   papelSolicitante!: PapelAdm;
 
@@ -87,6 +89,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
+    await this.inicializarBuscaFeriados();
     await this.inicializarVerificacaoPapel();
     await this.inicializarBuscaProjetos();
     this.carregandoInformacoes.set(false);
@@ -113,6 +116,12 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     await this.buscaProjetos();
     this.tratarProjetos();
     this.dadosProjetoComponent.preencheListaProjetos(this.listaProjetos);
+  }
+
+  async inicializarBuscaFeriados(): Promise<void> {
+    await this.buscaListaFeriados();
+    this.dadosProjetoComponent.preencherFeriados(this.feriados);
+    this.colaboradoresGravadosComponent.preencherFeriados(this.feriados);
   }
 
   async reinicializarComponente(): Promise<void> {
@@ -194,6 +203,30 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     }
   }
 
+  async buscaListaFeriados(): Promise<void> {
+    try {
+      const projetos = await firstValueFrom(
+        this.informacoesColaboradorService.obterListaFeriados()
+      );
+      if (!projetos?.outputData?.feriados) {
+        this.notificarErro(
+          'Erro ao buscar a lista de feriados, tente mais tarde ou contate o administrador.'
+        );
+      } else {
+        if (!Array.isArray(projetos.outputData.feriados))
+          projetos.outputData.feriados = [projetos.outputData.feriados];
+        this.feriados = projetos.outputData.feriados;
+      }
+    } catch (error) {
+      console.error(error);
+      this.notificarErro(
+        'Erro ao buscar a lista de feriados, tente mais tarde ou contate o admnistrador. ' +
+          error
+      );
+      this.carregandoInformacoes.set(false);
+    }
+  }
+
   notificarErro(mensagem: string) {
     this.messageService.add({
       severity: 'error',
@@ -205,7 +238,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   notificarSucesso(mensagem: string) {
     this.messageService.add({
       severity: 'success',
-      summary: 'Erro',
+      summary: 'Sucesso',
       detail: mensagem,
       life: 10000,
     });

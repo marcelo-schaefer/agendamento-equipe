@@ -32,6 +32,9 @@ import {
   ProjetoPorData,
 } from '../../services/models/colaboradorePorData';
 import { MessageService } from 'primeng/api';
+import { Lancamento } from '../../services/models/lancamento';
+import { LegendaSiglas } from '../../services/models/legenda-siglas';
+import { Feriado } from '../../services/models/feriado';
 
 @Component({
   selector: 'app-colaboradores-gravados',
@@ -79,6 +82,8 @@ export class ColaboradoresGravadosComponent {
   nTop = 10;
   nSkip = 0;
   aPapelAdm = 'N';
+  listaLegendas: LegendaSiglas[] = [];
+  feriados: Feriado[] = [];
 
   constructor(private messageService: MessageService) {}
 
@@ -98,6 +103,10 @@ export class ColaboradoresGravadosComponent {
         lista.map((colab) => this.converteColaboradorParaBusca(colab))
       )
     );
+  }
+
+  preencherFeriados(feriados: Feriado[]): void {
+    this.feriados = feriados;
   }
 
   aplicarFiltroData(): void {
@@ -186,6 +195,7 @@ export class ColaboradoresGravadosComponent {
   }
 
   geraOpcoesIniciais(): void {
+    this.criaListaLegendaSiglas();
     this.buscaColaboradoresComponent.opcoesIniciais();
   }
 
@@ -339,13 +349,135 @@ export class ColaboradoresGravadosComponent {
     this.listaColunas = dias.map((dia) => this.formatarData(dia));
   }
 
-  obterTipoLancamento(projeto: ProjetoPorData, data: string): string {
-    if (!projeto.lancamentos) return '-';
+  obterTipoLancamento(projeto: ProjetoPorData, data: string): Lancamento {
+    if (!projeto.lancamentos) return { DData: data, ATipoLancamento: null };
     const lanc = projeto.lancamentos.find((l) => l.DData === data);
-    return lanc ? lanc.ATipoLancamento : '-';
+    return lanc || { DData: data, ATipoLancamento: null };
   }
 
   copiarColaborador(colaborador: Colaborador): void {
     this.colaboradorEmitter.emit(colaborador);
+  }
+
+  retornaCorFeriadoFinalSemana(data: string): string {
+    return this.retornaCorFinalSemana(data) || this.retornaCorFeriado(data);
+  }
+
+  retornaCorFeriado(data: string): string {
+    let cor = '';
+    this.feriados.forEach((feriado) => {
+      if (feriado.data === data) {
+        cor = 'lightblue';
+      }
+    });
+    return cor;
+  }
+
+  retornaCorFinalSemana(dataStr: string): string {
+    const [dia, mes, ano] = dataStr.split('/').map(Number);
+    const data = new Date(ano, mes - 1, dia);
+    const diaSemana = data.getDay(); // 0 = domingo, 6 = sábado
+
+    if (diaSemana === 0 || diaSemana === 6) {
+      return 'lightblue';
+    }
+    return '';
+  }
+
+  excluirColaboradorDaLista(colaborador: Colaborador): void {
+    this.listaColaboradoresPorData = this.listaColaboradoresPorData.filter(
+      (c) => c.NMatricula !== colaborador.NMatricula
+    );
+  }
+
+  retornaCorConformeSigla(projeto: ProjetoPorData, dataColuna: string): string {
+    const lancamento = this.obterTipoLancamento(projeto, dataColuna);
+    const legenda = this.listaLegendas.find(
+      (l) => l.sigla === lancamento.ATipoLancamento
+    );
+    return legenda ? legenda.cor : 'color: black;';
+  }
+
+  criaListaLegendaSiglas(): void {
+    this.listaLegendas = [
+      {
+        descricao: 'Atividade de campo confirmada',
+        sigla: 'Cam',
+        formatacao: 'Fonte verde negrito',
+        cor: 'color: green; font-weight: bold;',
+      },
+      {
+        descricao: 'Atividade de escritório confirmada',
+        sigla: 'Esc',
+        formatacao: 'Fonte verde negrito',
+        cor: 'color: green; font-weight: bold;',
+      },
+      {
+        descricao: 'Atividade de campo planejada/ a confirmar',
+        sigla: 'CamP',
+        formatacao: 'Fonte em vermelho',
+        cor: 'color: red;',
+      },
+      {
+        descricao: 'Atividade de escritório planejada/ a confirmar',
+        sigla: 'EscP',
+        formatacao: 'Fonte em vermelho',
+        cor: 'color: red;',
+      },
+      {
+        descricao: 'Compensação de Horas',
+        sigla: 'CH',
+        formatacao: 'Fonte em preto/padrão',
+        cor: 'color: black;',
+      },
+      {
+        descricao: 'Férias',
+        sigla: 'Fe',
+        formatacao: 'Fonte em preto/padrão',
+        cor: 'color: black;',
+      },
+      {
+        descricao: 'Não agendar campo',
+        sigla: 'P',
+        formatacao: 'Fonte em preto/padrão',
+        cor: 'color: black;',
+      },
+      {
+        descricao: 'Licença Médica/Maternidade',
+        sigla: 'LM',
+        formatacao: 'Fonte em preto/padrão',
+        cor: 'color: black;',
+      },
+      {
+        descricao: 'Feriados Municipais e Estaduais',
+        sigla: 'FD',
+        formatacao: 'Fonte em preto e preenchimento em cinza',
+        cor: 'color: black; background-color: gray;',
+      },
+      {
+        descricao: 'Final de Semana (sábado ou domingo)',
+        sigla: 'FS',
+        formatacao: 'Fonte em preto e preenchimento em cinza',
+        cor: 'color: black; background-color: gray;',
+      },
+      {
+        descricao: 'Recesso Sete',
+        sigla: 'RS',
+        formatacao: 'Fonte em preto e preenchimento em cinza',
+        cor: 'color: black; background-color: gray;',
+      },
+      {
+        descricao: 'Descanso Semanal Remunerado',
+        sigla: 'DSR',
+        formatacao: 'Fonte em preto e preenchimento em cinza',
+        cor: 'color: black; background-color: gray;',
+      },
+      {
+        descricao: 'Feriados e Finais de Semana',
+        sigla: ' - ',
+        formatacao: 'Fonte em azul claro',
+        cor: '',
+      },
+    ];
   }
 }

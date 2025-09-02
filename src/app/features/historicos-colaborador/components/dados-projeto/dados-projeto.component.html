@@ -81,7 +81,11 @@
         <th class="centro">Copiar</th>
         <th class="centro">Colar</th>
         <th class="centro">Excluir</th>
-        <th *ngFor="let dataColuna of listaColunas" class="centro">
+        <th
+          *ngFor="let dataColuna of listaColunas"
+          class="centro"
+          [style.color]="retornaCorFeriadoFinalSemana(dataColuna)"
+        >
           {{ dataColuna }}
         </th>
       </tr>
