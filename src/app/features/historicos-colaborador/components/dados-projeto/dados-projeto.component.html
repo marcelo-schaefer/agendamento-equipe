@@ -29,7 +29,10 @@
   <br />
 
   <p-panel header="Legenda" [toggleable]="true" [collapsed]="true">
-    <p-table [value]="listaLegendas" [tableStyle]="{ 'min-width': '50rem' }">
+    <p-table
+      [value]="retornaListaLegendasParaTela()"
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
       <ng-template pTemplate="header">
         <tr>
           <th>Descrição</th>

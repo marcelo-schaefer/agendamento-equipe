@@ -91,7 +91,6 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
     'P',
     'LM',
     'FD',
-    'FS',
     'RS',
     'DSR',
   ];
@@ -572,6 +571,10 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
     return legenda ? legenda.cor : 'color: black;';
   }
 
+  retornaListaLegendasParaTela(): LegendaSiglas[] {
+    return this.listaLegendas.filter((f) => f.sigla !== 'FS');
+  }
+
   criaListaLegendaSiglas(): void {
     this.listaLegendas = [
       {
@@ -645,12 +648,6 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
         sigla: 'DSR',
         formatacao: 'Fonte em preto e preenchimento em cinza',
         cor: 'color: black; background-color: gray;',
-      },
-      {
-        descricao: 'Feriados e Finais de Semana',
-        sigla: ' - ',
-        formatacao: 'Fonte em azul claro',
-        cor: '',
       },
     ];
   }
