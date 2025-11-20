@@ -25,6 +25,19 @@
         type="button"
         label="Adicionar"
         [disabled]="desabilitar || loading"
+        (click)="adicionaColaboradorListaFiltro()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Pesquisar"
+        [disabled]="
+          desabilitar ||
+          loading ||
+          !dataInicio ||
+          !dataFinal ||
+          listaColaboradoresParaPesquisa.length < 1
+        "
         (click)="buscarColaboradorSelecionado()"
       ></button>
       <button
@@ -34,6 +47,17 @@
         [disabled]="desabilitar || loading"
         (click)="buscarTodosColaboradores()"
       ></button>
+    </div>
+
+    <br />
+    <div class="card p-fluid" *ngIf="listaNomes.length > 0">
+      <p-chips
+        [(ngModel)]="listaNomes"
+        [max]="1"
+        (onRemove)="removerNome()"
+        (onAdd)="montaListaNome()"
+      >
+      </p-chips>
     </div>
   </div>
 

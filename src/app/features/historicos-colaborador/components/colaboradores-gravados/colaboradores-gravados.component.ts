@@ -20,8 +20,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DialogModule } from 'primeng/dialog';
 import { FloatLabelModule } from 'primeng/floatlabel';
+import { ChipsModule } from 'primeng/chips';
 import { eachDayOfInterval, format } from 'date-fns';
-import { ChipModule } from 'primeng/chip';
 import { BuscaColaboradoresComponent } from '../busca-colaboradores/busca-colaboradores.component';
 import { InformacoesColaboradorService } from '../../services/informacoes-colaborador.service';
 import { firstValueFrom } from 'rxjs';
@@ -58,7 +58,7 @@ import { Feriado } from '../../services/models/feriado';
     InputNumberModule,
     DialogModule,
     FloatLabelModule,
-    ChipModule,
+    ChipsModule,
   ],
 })
 export class ColaboradoresGravadosComponent {
@@ -84,6 +84,8 @@ export class ColaboradoresGravadosComponent {
   aPapelAdm = 'N';
   listaLegendas: LegendaSiglas[] = [];
   feriados: Feriado[] = [];
+  listaColaboradoresParaPesquisa: Colaborador[] = [];
+  listaNomes: string[] | undefined = [];
 
   constructor(private messageService: MessageService) {}
 
@@ -165,7 +167,14 @@ export class ColaboradoresGravadosComponent {
         );
       } else if (colaboradores?.outputData?.colaboradores) {
         this.listaColaboradoresPorData = this.listaColaboradoresPorData.concat(
-          this.tratarRetorno(colaboradores.outputData.colaboradores)
+          this.tratarRetorno(
+            colaboradores.outputData.colaboradores.filter(
+              (f) =>
+                !this.listaColaboradoresPorData
+                  .map((m) => m.NMatricula)
+                  .includes(f.NMatricula)
+            )
+          )
         );
         this.ordenaLista();
       }
@@ -213,16 +222,15 @@ export class ColaboradoresGravadosComponent {
     if (
       this.dataInicio &&
       this.dataFinal &&
-      this.buscaColaboradoresComponent.colaborador &&
-      !this.validarColaboradorJaNaLista()
+      this.buscaColaboradoresComponent.colaborador
     ) {
       this.nSkip = 0;
       this.buscaDadosColaboradores(
-        this.montaCorpoBuscaComColaboradores([
-          this.converteColaboradorParaBusca(
-            this.buscaColaboradoresComponent.colaborador
-          ),
-        ])
+        this.montaCorpoBuscaComColaboradores(
+          this.listaColaboradoresParaPesquisa.map((m) =>
+            this.converteColaboradorParaBusca(m)
+          )
+        )
       );
     } else {
       if (!this.dataInicio || !this.dataFinal) {
@@ -232,6 +240,41 @@ export class ColaboradoresGravadosComponent {
         this.notificarErro('Por favor, selecione um colaborador para buscar.');
       }
     }
+  }
+
+  adicionaColaboradorListaFiltro(): void {
+    if (
+      this.buscaColaboradoresComponent.colaborador &&
+      !this.listaColaboradoresParaPesquisa.includes(
+        this.buscaColaboradoresComponent.colaborador
+      )
+    ) {
+      this.listaColaboradoresParaPesquisa.push(
+        this.buscaColaboradoresComponent.colaborador
+      );
+      this.montaListaNome();
+    }
+  }
+
+  montaListaNome(): void {
+    this.listaNomes = this.listaColaboradoresParaPesquisa.map((m) => m.ANome);
+  }
+
+  removerNome(): void {
+    this.listaColaboradoresParaPesquisa =
+      this.listaColaboradoresParaPesquisa.filter((n) =>
+        this.listaNomes.includes(n.ANome)
+      );
+    this.montaListaNome();
+  }
+
+  retornaListaMatriculas(): string {
+    let matriculas = '';
+    this.listaColaboradoresParaPesquisa.forEach((colaborador) => {
+      matriculas += matriculas + ', ';
+    });
+    if (matriculas) matriculas = matriculas.slice(0, -2);
+    return matriculas;
   }
 
   recalculaDataParaColaboradores(): void {
@@ -248,22 +291,6 @@ export class ColaboradoresGravadosComponent {
       this.listaColaboradoresPorData = [];
       this.buscaDadosColaboradores(body);
     }
-  }
-
-  validarColaboradorJaNaLista(): boolean {
-    const colaboradorSelecionado =
-      this.buscaColaboradoresComponent?.colaborador;
-    const estaNaLista =
-      colaboradorSelecionado &&
-      this.listaColaboradoresPorData.some(
-        (colaborador) =>
-          colaborador.NEmpresa === colaboradorSelecionado.NEmpresa &&
-          colaborador.NTipoColaborador ===
-            colaboradorSelecionado.NTipoColaborador &&
-          colaborador.NMatricula === colaboradorSelecionado.NMatricula
-      );
-    if (estaNaLista) this.notificarErro('Colaborador já está na lista.');
-    return estaNaLista;
   }
 
   tratarRetorno(

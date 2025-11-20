@@ -324,7 +324,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
   colarColaborador(colaborador: Colaborador): void {
     colaborador.projetoSelecionado = this.colaboradorCopiado.projetoSelecionado;
     colaborador.tipoAlocacaoSelecionado =
-      this.colaboradorCopiado.tipoAlocacaoSelecionado;
+      this.colaboradorCopiado?.tipoAlocacaoSelecionado;
     colaborador.lancamentos = this.colaboradorCopiado.lancamentos.filter((f) =>
       this.validaEdicaoLancamento(f.DData)
     );
@@ -524,8 +524,7 @@ export class DadosProjetoComponent implements OnInit, AfterViewInit {
     this.listaColaboradores.forEach((colab) => {
       colab.validandoCampos = true;
 
-      valido =
-        valido && !!colab.tipoAlocacaoSelecionado && !!colab.projetoSelecionado;
+      valido = valido && !!colab.projetoSelecionado;
     });
     if (!valido) {
       this.notificarErro(
