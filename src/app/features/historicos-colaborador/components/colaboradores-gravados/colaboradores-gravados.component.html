@@ -47,6 +47,15 @@
         [disabled]="desabilitar || loading"
         (click)="buscarTodosColaboradores()"
       ></button>
+      <button
+        pButton
+        type="button"
+        label="Limpar"
+        [disabled]="
+          desabilitar || loading || listaColaboradoresParaPesquisa.length < 1
+        "
+        (click)="listaNomes = []; listaColaboradoresParaPesquisa = []"
+      ></button>
     </div>
 
     <br />

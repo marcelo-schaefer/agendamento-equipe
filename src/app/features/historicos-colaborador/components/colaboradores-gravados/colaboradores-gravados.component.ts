@@ -166,14 +166,15 @@ export class ColaboradoresGravadosComponent {
             colaboradores.outputData.message
         );
       } else if (colaboradores?.outputData?.colaboradores) {
+        const listaTratada = this.tratarRetorno(
+          colaboradores.outputData.colaboradores
+        );
         this.listaColaboradoresPorData = this.listaColaboradoresPorData.concat(
-          this.tratarRetorno(
-            colaboradores.outputData.colaboradores.filter(
-              (f) =>
-                !this.listaColaboradoresPorData
-                  .map((m) => m.NMatricula)
-                  .includes(f.NMatricula)
-            )
+          listaTratada.filter(
+            (f) =>
+              !this.listaColaboradoresPorData
+                .map((m) => m.NMatricula)
+                .includes(f.NMatricula)
           )
         );
         this.ordenaLista();
