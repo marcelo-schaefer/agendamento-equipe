@@ -257,6 +257,12 @@ export class ColaboradoresGravadosComponent {
     }
   }
 
+  limparTudo(): void {
+    this.listaNomes = [];
+    this.listaColaboradoresParaPesquisa = []
+    this.listaColaboradoresPorData = []
+  }
+
   montaListaNome(): void {
     this.listaNomes = this.listaColaboradoresParaPesquisa.map((m) => m.ANome);
   }
