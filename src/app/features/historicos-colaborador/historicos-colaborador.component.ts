@@ -77,7 +77,20 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   async ngOnInit(): Promise<void> {
     this.carregandoInformacoes.set(true);
     this.desabilitarFormulario(true);
+    await this.checkInicializacao();
+    this.inicializaComponente();
+  }
 
+  async ngAfterViewInit(): Promise<void> {
+    await this.checkInicializacao();
+    await this.inicializarBuscaFeriados();
+    await this.inicializarVerificacaoPapel();
+    await this.inicializarBuscaProjetos();
+    this.carregandoInformacoes.set(false);
+    this.desabilitarFormulario(false);
+  }
+
+  async checkInicializacao(): Promise<void> {
     while (
       !this.tokenService.token$.value?.accessToken ||
       !this.tokenService.username
@@ -85,15 +98,6 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       this.tokenService.carregarToken();
     }
-    this.inicializaComponente();
-  }
-
-  async ngAfterViewInit(): Promise<void> {
-    await this.inicializarBuscaFeriados();
-    await this.inicializarVerificacaoPapel();
-    await this.inicializarBuscaProjetos();
-    this.carregandoInformacoes.set(false);
-    this.desabilitarFormulario(false);
   }
 
   inicializaComponente(): void {
