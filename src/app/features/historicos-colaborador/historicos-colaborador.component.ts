@@ -28,6 +28,11 @@ import {
 } from './services/models/persistencia';
 import { CorpoBusca } from './services/models/corpo-busca';
 import { ButtonModule } from 'primeng/button';
+import { BuscaColaboradoresComponent } from './components/busca-colaboradores/busca-colaboradores.component';
+import { ColaboradoresGravadosComponent } from './components/colaboradores-gravados/colaboradores-gravados.component';
+import { PapelAdm } from './services/models/papel-adm';
+import { TokenService } from '../../core/services/token.service';
+import { Feriado } from './services/models/feriado';
 
 @Component({
   selector: 'app-historicos-colaborador',
@@ -35,6 +40,8 @@ import { ButtonModule } from 'primeng/button';
   imports: [
     FormsModule,
     DadosProjetoComponent,
+    BuscaColaboradoresComponent,
+    ColaboradoresGravadosComponent,
     LoadingComponent,
     CalendarModule,
     ToastModule,
@@ -49,76 +56,101 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   @ViewChild(DadosProjetoComponent, { static: true })
   dadosProjetoComponent: DadosProjetoComponent | undefined;
 
+  @ViewChild(ColaboradoresGravadosComponent, { static: true })
+  colaboradoresGravadosComponent: ColaboradoresGravadosComponent | undefined;
+
   private informacoesColaboradorService = inject(InformacoesColaboradorService);
+  private tokenService = inject(TokenService);
 
   protected informacoesColaborador = signal<Colaborador | undefined>(undefined);
   carregandoInformacoes = signal(false);
 
-  listaProejtos!: Projeto[];
+  listaProjetos!: Projeto[];
   listaColaboradores!: Colaborador[];
+  listaColaboradoresGravados: Colaborador[] = [];
+  feriados: Feriado[] = [];
   projetoSelecionado!: Projeto;
+  papelSolicitante!: PapelAdm;
 
   constructor(private messageService: MessageService) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    await this.checkInicializacao();
     this.carregandoInformacoes.set(true);
+    this.desabilitarFormulario(true);
     this.inicializaComponente();
   }
 
   async ngAfterViewInit(): Promise<void> {
-    await this.inicializarBuscaColaboradores();
+    await this.checkInicializacao();
+    await this.inicializarBuscaFeriados();
+    await this.inicializarVerificacaoPapel();
     await this.inicializarBuscaProjetos();
     this.carregandoInformacoes.set(false);
+    this.desabilitarFormulario(false);
+  }
+
+  async checkInicializacao(): Promise<void> {
+    while (
+      !this.tokenService.token$.value?.accessToken ||
+      !this.tokenService.username
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      this.tokenService.carregarToken();
+    }
   }
 
   inicializaComponente(): void {
     this.dadosProjetoComponent.limparFormulario();
   }
 
-  async inicializarBuscaColaboradores(query?: string): Promise<void> {
-    this.dadosProjetoComponent.carregarTabela(true);
-    await this.buscaColaboradores(query);
-    this.tratarColaboradores();
-    this.dadosProjetoComponent.preencheListaColaboradores(
-      this.listaColaboradores
+  async inicializarVerificacaoPapel(): Promise<void> {
+    await this.verificaPapelSolicitante();
+    this.dadosProjetoComponent.preencherPapelAdm(
+      this.papelSolicitante?.APapelAdmAgendaEquipe || 'N'
     );
-    this.dadosProjetoComponent.carregarTabela(false);
+    this.colaboradoresGravadosComponent.preencherPapelAdm(
+      this.papelSolicitante?.APapelAdmAgendaEquipe || 'N'
+    );
+    this.dadosProjetoComponent.geraOpcoesIniciais();
+    this.colaboradoresGravadosComponent.geraOpcoesIniciais();
   }
 
   async inicializarBuscaProjetos(): Promise<void> {
     await this.buscaProjetos();
     this.tratarProjetos();
-    this.dadosProjetoComponent.preencheListaProejtos(this.listaProejtos);
+    this.dadosProjetoComponent.preencheListaProjetos(this.listaProjetos);
+  }
+
+  async inicializarBuscaFeriados(): Promise<void> {
+    await this.buscaListaFeriados();
+    this.dadosProjetoComponent.preencherFeriados(this.feriados);
+    this.colaboradoresGravadosComponent.preencherFeriados(this.feriados);
   }
 
   async reinicializarComponente(): Promise<void> {
-    // window.location.reload();
+    this.validarColaboradoresGravados();
     this.carregandoInformacoes.set(true);
     this.dadosProjetoComponent.limparFormulario();
-    await this.inicializarBuscaColaboradores();
-    await this.inicializarBuscaProjetos();
     this.carregandoInformacoes.set(false);
     this.desabilitarFormulario(false);
+    this.colaboradoresGravadosComponent.preencherListaColaborador(
+      this.listaColaboradoresGravados
+    );
   }
 
-  tratarColaboradores(): void {
-    if (this.listaColaboradores) {
-      if (!Array.isArray(this.listaColaboradores))
-        this.listaColaboradores = [this.listaColaboradores];
-
-      this.listaColaboradores.forEach((colaborador) => {
-        if (colaborador.projetos && !Array.isArray(colaborador.projetos))
-          colaborador.projetos = [colaborador.projetos];
-      });
-    }
+  validarColaboradoresGravados(): void {
+    this.listaColaboradoresGravados = JSON.parse(
+      JSON.stringify(this.dadosProjetoComponent.listaColaboradores)
+    );
   }
 
   tratarProjetos(): void {
-    if (this.listaProejtos) {
-      if (!Array.isArray(this.listaProejtos))
-        this.listaProejtos = [this.listaProejtos];
+    if (this.listaProjetos) {
+      if (!Array.isArray(this.listaProjetos))
+        this.listaProjetos = [this.listaProjetos];
 
-      this.listaProejtos = this.ordenarProjetosPorNome(this.listaProejtos);
+      this.listaProjetos = this.ordenarProjetosPorNome(this.listaProjetos);
     }
   }
 
@@ -143,7 +175,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
         this.notificarErro(
           'Erro ao buscar a lista de projetos, ' + projetos.outputData.message
         );
-      } else this.listaProejtos = projetos.outputData.projetos;
+      } else this.listaProjetos = projetos.outputData.projetos;
     } catch (error) {
       console.error(error);
       this.notificarErro(
@@ -154,26 +186,45 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
     }
   }
 
-  async buscaColaboradores(query?: string): Promise<void> {
+  async verificaPapelSolicitante(): Promise<void> {
     try {
-      const body: CorpoBusca = {
-        nTop: 10,
-        nSkip: 0,
-        aQuery: query,
-      };
       const projetos = await firstValueFrom(
-        this.informacoesColaboradorService.obterListaColaboradores(body)
+        this.informacoesColaboradorService.verificaPapel()
       );
       if (projetos.outputData.message) {
         this.notificarErro(
-          'Erro ao buscar a lista de colaboradores, ' +
+          'Erro ao identificar papeis do solicitante, a procura de colaboradores seguirá pela a hierarquia, ' +
             projetos.outputData.message
         );
-      } else this.listaColaboradores = projetos.outputData.colaboradores;
+      } else this.papelSolicitante = projetos.outputData;
     } catch (error) {
       console.error(error);
       this.notificarErro(
-        'Erro ao buscar a lista de colaboradores, tente mais tarde ou contate o admnistrador. ' +
+        'Erro ao identificar papeis do solicitante, a procura de colaboradores seguirá pela a hierarquia, tente mais tarde ou contate o admnistrador. ' +
+          error
+      );
+      this.carregandoInformacoes.set(false);
+    }
+  }
+
+  async buscaListaFeriados(): Promise<void> {
+    try {
+      const projetos = await firstValueFrom(
+        this.informacoesColaboradorService.obterListaFeriados()
+      );
+      if (!projetos?.outputData?.feriados) {
+        this.notificarErro(
+          'Erro ao buscar a lista de feriados, tente mais tarde ou contate o administrador.'
+        );
+      } else {
+        if (!Array.isArray(projetos.outputData.feriados))
+          projetos.outputData.feriados = [projetos.outputData.feriados];
+        this.feriados = projetos.outputData.feriados;
+      }
+    } catch (error) {
+      console.error(error);
+      this.notificarErro(
+        'Erro ao buscar a lista de feriados, tente mais tarde ou contate o admnistrador. ' +
           error
       );
       this.carregandoInformacoes.set(false);
@@ -191,10 +242,14 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
   notificarSucesso(mensagem: string) {
     this.messageService.add({
       severity: 'success',
-      summary: 'Erro',
+      summary: 'Sucesso',
       detail: mensagem,
       life: 10000,
     });
+  }
+
+  copiarColaborador(colaborador: Colaborador): void {
+    this.dadosProjetoComponent.copiarColaborador(colaborador);
   }
 
   async enviarSolicitacao(): Promise<void> {
@@ -205,6 +260,7 @@ export class HistoricosColaboradorComponent implements OnInit, AfterViewInit {
 
   desabilitarFormulario(desabilitar: boolean): void {
     this.dadosProjetoComponent.desabilitarFormulario(desabilitar);
+    this.colaboradoresGravadosComponent.desabilitarFormulario(desabilitar);
   }
 
   async gravarEnvio(): Promise<void> {

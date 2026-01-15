@@ -1,356 +1,386 @@
 <p-card>
   <p-toast />
   <ng-template pTemplate="title">
-    <h2>Aegnda da Equipe</h2>
+    <h2>Agenda da Equipe</h2>
   </ng-template>
 
-  <ng-template pTemplate="content">
-    <div class="mb-4">
-      <label for="colaboradorInput" class="block font-semibold mb-2"
-        >Buscar Colaborador</label
-      >
+  <div class="mb-4">
+    <label for="colaboradorInput" class="block font-semibold mb-2"
+      >Buscar Colaborador</label
+    >
 
-      <div
-        class="form-responsive"
-        style="display: flex; gap: 0.5rem; align-items: start"
-      >
-        <input
-          pInputText
-          style="width: 400px"
-          [(ngModel)]="colaboradorParaBusca"
-          [disabled]="desabilitar"
-          placeholder="Informe um colaborador para busca"
-        />
-        <button
-          pButton
-          type="button"
-          label="Buscar"
-          icon="pi pi-search"
-          pTooltip="teste"
-          [disabled]="desabilitar"
-          (click)="emitirColaborador()"
-        ></button>
-      </div>
+    <div
+      class="form-responsive"
+      style="display: flex; gap: 0.5rem; align-items: start"
+    >
+      <app-busca-colaboradores
+        [style.width]="'400px'"
+      ></app-busca-colaboradores>
+      <button
+        pButton
+        type="button"
+        label="Adicionar"
+        [disabled]="desabilitar || loading"
+        (click)="adicionarColaboradorSelecionado()"
+      ></button>
     </div>
-    <div class="mb-4">
-      <div
-        class="form-responsive"
-        style="display: flex; gap: 0.5rem; align-items: start"
-      >
-        <p-messages
-          [(value)]="messages"
-          [enableService]="false"
-          [closable]="false"
-        />
-      </div>
-    </div>
+  </div>
 
-    <br />
+  <br />
 
+  <p-panel header="Legenda" [toggleable]="true" [collapsed]="true">
     <p-table
-      [value]="listaColaboradores"
-      dataKey="NMatricula"
+      [value]="retornaListaLegendasParaTela()"
       [tableStyle]="{ 'min-width': '50rem' }"
-      [loading]="loading"
-      scrollHeight="flex"
-      [scrollable]="true"
-      scrollHeight="600px"
-      [expandedRowKeys]="expandedRows"
     >
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 5%"></th>
-          <th class="centro" style="width: 40%" pFrozenColumn>Nome</th>
-          <th class="centro" pFrozenColumn>Projeto</th>
-          <th class="centro">Tipo Alocação</th>
-          <th class="centro">Planejado</th>
-          <th class="centro">Saldo</th>
-          <th class="centro">Filtro de Data</th>
-          <th class="centro">Preenchimento automatico</th>
-          <th class="centro">Copiar</th>
-          <th class="centro">Colar</th>
+          <th>Descrição</th>
+          <th>Legenda</th>
+          <th>Formatação</th>
         </tr>
       </ng-template>
-      <ng-template pTemplate="body" let-colaborador let-expanded="expanded">
+      <ng-template pTemplate="body" let-product>
         <tr>
-          <td pFrozenColumn>
-            <p-button
-              type="button"
-              pRipple
-              [pRowToggler]="colaborador"
-              [text]="true"
-              [rounded]="true"
-              [plain]="true"
-              [disabled]="!colaborador.lancamentos"
-              [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-            />
-          </td>
-          <td style="width: 300px" pFrozenColumn>
-            {{ colaborador.ANome || "" }}
-          </td>
-          <td pFrozenColumn>
-            <p-dropdown
-              [options]="listaProjetos"
-              [(ngModel)]="colaborador.projetoSelecionado"
-              optionLabel="ANome"
-              placeholder="Selecione um projeto"
-              appendTo="body"
-              autoWidth="false"
-              [style]="{ width: '300px' }"
-              required
-              [ngClass]="{
-                'ng-invalid ng-dirty':
-                  colaborador.validandoCampos && !colaborador.projetoSelecionado
-              }"
-            ></p-dropdown>
-            <div
-              *ngIf="
-                colaborador.validandoCampos && !colaborador.projetoSelecionado
-              "
-              class="p-error"
-            >
-              Projeto é obrigatório.
-            </div>
-          </td>
-          <td>
-            <p-dropdown
-              [options]="listaAlocaacoFullTime"
-              [(ngModel)]="colaborador.tipoAlocacaoSelecionado"
-              placeholder="Tipo de alocação"
-              autoWidth="false"
-              [style]="{ width: '200px' }"
-              appendTo="body"
-              [ngClass]="{
-                'ng-invalid ng-dirty':
-                  colaborador.validandoCampos &&
-                  !colaborador.tipoAlocacaoSelecionado
-              }"
-            ></p-dropdown>
-            <div
-              *ngIf="
-                colaborador.validandoCampos &&
-                !colaborador.tipoAlocacaoSelecionado
-              "
-              class="p-error"
-            >
-              Tipo de alocação é obrigatório.
-            </div>
-          </td>
-          <td class="centro">
-            {{ validaPlanejado(colaborador) }}
-          </td>
-          <td class="centro">
-            {{ validaSaldo(colaborador) }}
-          </td>
-          <td class="centro">
-            <p-button
-              label="Filtrar datas"
-              (onClick)="inicializarFiltroData(colaborador)"
-              autoWidth="false"
-              [style]="{ width: '125px' }"
-            />
-          </td>
-          <td class="centro">
-            <p-button
-              label="Preencher datas"
-              [disabled]="!colaborador.lancamentos"
-              (onClick)="inicializarPreenchimento(colaborador)"
-              autoWidth="false"
-              [style]="{ width: '175px' }"
-            />
-          </td>
-          <td class="centro">
-            <p-button
-              [disabled]="!colaborador.lancamentos"
-              (onClick)="colaboradorCopiado = colaborador"
-              autoWidth="false"
-              icon="pi pi-copy"
-              [style]="{ width: '75px' }"
-            />
-          </td>
-          <td class="centro">
-            <p-button
-              [disabled]="!colaboradorCopiado"
-              (onClick)="colarColaborador(colaborador)"
-              autoWidth="false"
-              icon="pi pi-clipboard"
-              [style]="{ width: '75px' }"
-            />
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="rowexpansion" let-colaborador>
-        <tr>
-          <td colspan="7">
-            <div class="p-3">
-              <p-table
-                *ngIf="colaborador?.lancamentos"
-                [value]="colaborador?.lancamentos"
-                dataKey="DData"
-              >
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th>Data</th>
-                    <th>Tipo do Lançamento</th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-porta>
-                  <tr>
-                    <td>{{ porta.DData }}</td>
-                    <td
-                      [pEditableColumn]="porta.ATipoLancamento"
-                      pEditableColumnField="code"
-                    >
-                      <p-cellEditor>
-                        <ng-template pTemplate="input">
-                          <p-dropdown
-                            [options]="listaTipoAlocacao"
-                            [(ngModel)]="porta.ATipoLancamento"
-                            appendTo="body"
-                            autoWidth="false"
-                            [showClear]="true"
-                            [style]="{ width: '125px' }"
-                            [disabled]="!validaEdicaoLancamento(porta.DData)"
-                          ></p-dropdown>
-                        </ng-template>
-                        <ng-template pTemplate="output">
-                          {{ porta.ATipoLancamento || "-" }}
-                        </ng-template>
-                      </p-cellEditor>
-                    </td>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="emptymessage">
-                  <tr>
-                    <td colspan="6">Carregando...</td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="loadingbody" let-columns="columns">
-        <tr style="height: 46px">
-          <td *ngFor="let col of columns; let even = even">
-            <p-skeleton
-              [ngStyle]="{
-                width: '60%'
-              }"
-            />
-          </td>
+          <td>{{ product.descricao }}</td>
+          <td>{{ product.sigla }}</td>
+          <td [style]="product.cor">{{ product.formatacao }}</td>
         </tr>
       </ng-template>
     </p-table>
+  </p-panel>
 
-    <p-dialog
-      header="Filtro de Datas"
-      [modal]="true"
-      [(visible)]="apresentarFiltroData"
-      [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
-      [style]="{ width: '50vw' }"
-      [draggable]="false"
-      [resizable]="false"
-    >
-      <div class="flex align-items-center gap-3 mb-3">
-        <label class="font-semibold w-6rem">Data Início</label>
-        <p-calendar
-          dateFormat="dd/mm/yy"
-          [(ngModel)]="dataInicio"
-          appendTo="body"
-        />
-      </div>
-      <div class="flex align-items-center gap-3 mb-5">
-        <label class="font-semibold w-6rem">Data Final</label>
-        <p-calendar
-          dateFormat="dd/mm/yy"
-          [(ngModel)]="dataFinal"
-          appendTo="body"
+  <br />
+  <br />
+
+  <button
+    pButton
+    type="button"
+    label="Filtrar Datas"
+    [disabled]="desabilitar || !listaColaboradores?.length"
+    (click)="apresentarFiltroData = true"
+  ></button>
+
+  <p-table
+    [value]="listaColaboradores || []"
+    dataKey="id"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [loading]="loading"
+    scrollHeight="flex"
+    [scrollable]="true"
+    scrollHeight="600px"
+    [frozenWidth]="'800px'"
+    [expandedRowKeys]="expandedRows"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th class="centro" style="width: 200px" pFrozenColumn>Nome</th>
+        <th class="centro" pFrozenColumn>Projeto</th>
+        <th class="centro">Tipo Alocação</th>
+        <th class="centro" style="width: 100px">Planejado</th>
+        <th class="centro" style="width: 100px">Saldo</th>
+        <th class="centro">Buscar Lançamentos</th>
+        <th class="centro">Preenchimento automatico</th>
+        <th class="centro">Copiar</th>
+        <th class="centro">Colar</th>
+        <th class="centro">Excluir</th>
+        <th
+          *ngFor="let dataColuna of listaColunas"
+          class="centro"
+          [style.color]="retornaCorFeriadoFinalSemana(dataColuna)"
+        >
+          {{ dataColuna }}
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-colaborador let-expanded="expanded">
+      <tr>
+        <td pFrozenColumn>
+          <span [ngClass]="{ 'nome-duplicado': colaborador.duplicado }">
+            {{ colaborador.ANome || "" }}
+          </span>
+        </td>
+        <td pFrozenColumn>
+          <p-dropdown
+            [options]="projetosFiltrados"
+            [(ngModel)]="colaborador.projetoSelecionado"
+            [editable]="true"
+            (input)="projetosFiltrados = filtrarProjetos($event)"
+            optionLabel="ANome"
+            placeholder="Selecione um projeto"
+            appendTo="body"
+            autoWidth="false"
+            [style]="{ width: '300px' }"
+            required
+            [ngClass]="{
+              'ng-invalid ng-dirty':
+                colaborador.validandoCampos && !colaborador.projetoSelecionado
+            }"
+          ></p-dropdown>
+          <div
+            *ngIf="
+              colaborador.validandoCampos && !colaborador.projetoSelecionado
+            "
+            class="p-error"
+          >
+            Projeto é obrigatório.
+          </div>
+        </td>
+        <td>
+          <p-dropdown
+            [options]="listaAlocaacoFullTime"
+            [(ngModel)]="colaborador.tipoAlocacaoSelecionado"
+            placeholder="Tipo de alocação"
+            autoWidth="false"
+            [style]="{ width: '200px' }"
+            appendTo="body"
+            [ngClass]="{
+              'ng-invalid ng-dirty':
+                colaborador.validandoCampos &&
+                !colaborador.tipoAlocacaoSelecionado
+            }"
+          ></p-dropdown>
+          <div
+            *ngIf="
+              colaborador.validandoCampos &&
+              !colaborador.tipoAlocacaoSelecionado
+            "
+            class="p-error"
+          >
+            Tipo de alocação é obrigatório.
+          </div>
+        </td>
+        <td class="centro">
+          <p [style]="{ width: '100px' }">{{ validaPlanejado(colaborador) }}</p>
+        </td>
+        <td
+          class="centro"
           [ngClass]="{
-            'ng-invalid ng-dirty': erroNasDatas
+            'texto-vermelho': verificaSaldoNegativo(validaSaldo(colaborador))
           }"
-        />
-        <span *ngIf="erroNasDatas" class="p-error">
-          Data Início maior que a Final.
-        </span>
-      </div>
+        >
+          <p [style]="{ width: '100px' }">{{ validaSaldo(colaborador) }}</p>
+        </td>
+        <td class="centro">
+          <p-button
+            label="Buscar"
+            [disabled]="!listaColunas?.length"
+            (onClick)="buscarLancamentosDoColaborador(colaborador)"
+            autoWidth="false"
+            [style]="{ width: '175px' }"
+          />
+        </td>
+        <td class="centro">
+          <p-button
+            label="Preencher datas"
+            [disabled]="!colaborador.lancamentos"
+            (onClick)="inicializarPreenchimento(colaborador)"
+            autoWidth="false"
+            [style]="{ width: '175px' }"
+          />
+        </td>
+        <td class="centro">
+          <p-button
+            [disabled]="!colaborador.lancamentos"
+            (onClick)="copiarColaborador(colaborador)"
+            autoWidth="false"
+            icon="pi pi-copy"
+            [style]="{ width: '75px' }"
+          />
+        </td>
+        <td class="centro">
+          <p-button
+            [disabled]="!colaboradorCopiado"
+            (onClick)="colarColaborador(colaborador)"
+            autoWidth="false"
+            icon="pi pi-clipboard"
+            [style]="{ width: '75px' }"
+          />
+        </td>
+        <td class="centro">
+          <p-button
+            [disabled]="desabilitar"
+            (onClick)="excluirColaboradorPorId(colaborador.id)"
+            autoWidth="false"
+            icon="pi pi-trash"
+            severity="danger"
+            [style]="{ width: '75px' }"
+          />
+        </td>
 
-      <div class="flex justify-content-end gap-2">
-        <p-button
-          label="Cancelar"
-          severity="secondary"
-          (onClick)="apresentarFiltroData = false"
-        />
-        <p-button label="Buscar" (onClick)="aplicarFiltroData()" />
-      </div>
-    </p-dialog>
+        <td
+          *ngFor="let dataColuna of listaColunas"
+          class="centro"
+          [pEditableColumn]="
+            obterTipoLancamento(colaborador, dataColuna).ATipoLancamento
+          "
+          pEditableColumnField="code"
+          [style]="retornaCorConformeSigla(colaborador, dataColuna)"
+        >
+          <p-cellEditor>
+            <ng-template pTemplate="input">
+              <p-dropdown
+                [options]="listaTipoAlocacao"
+                [(ngModel)]="
+                  obterTipoLancamento(colaborador, dataColuna).ATipoLancamento
+                "
+                (ngModelChange)="
+                  gravarTipoLancamento(colaborador, dataColuna, $event)
+                "
+                appendTo="body"
+                autoWidth="false"
+                [showClear]="true"
+                [style]="{ width: '125px' }"
+                [disabled]="
+                  !validaEdicaoLancamento(
+                    obterTipoLancamento(colaborador, dataColuna).DData
+                  )
+                "
+              ></p-dropdown>
+            </ng-template>
+            <ng-template pTemplate="output">
+              {{
+                obterTipoLancamento(colaborador, dataColuna).ATipoLancamento ||
+                  "-"
+              }}
+            </ng-template>
+          </p-cellEditor>
+        </td>
+      </tr>
+    </ng-template>
 
-    <p-dialog
-      header="Preenchimento automático"
-      [modal]="true"
-      [(visible)]="apresentarPreenchimento"
-      [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
-      [style]="{ width: '50vw' }"
-      [draggable]="false"
-      [resizable]="false"
-    >
-      <div class="flex align-items-center gap-3 mb-3">
-        <label class="font-semibold w-6rem">Data Início</label>
-        <p-calendar
-          dateFormat="dd/mm/yy"
-          [(ngModel)]="dataInicioPreenchimento"
-          [minDate]="dataInicioMinimaPreenchimento"
-          [maxDate]="dataFinalMaximaPreenchimento"
-          appendTo="body"
-        />
-      </div>
-      <div class="flex align-items-center gap-3 mb-5">
-        <label class="font-semibold w-6rem">Data Final</label>
-        <p-calendar
-          dateFormat="dd/mm/yy"
-          [(ngModel)]="dataFinalPreenchimento"
-          [minDate]="dataInicioMinimaPreenchimento"
-          [maxDate]="dataFinalMaximaPreenchimento"
-          appendTo="body"
-          [ngClass]="{
-            'ng-invalid ng-dirty': erroNasDatas
-          }"
-        />
-        <span *ngIf="erroNasDatas" class="p-error">
-          Data Início maior que a Final.
-        </span>
-      </div>
-      <div class="flex align-items-center gap-3 mb-5">
-        <label class="font-semibold w-6rem">Tipo de Alocação</label>
-        <p-dropdown
-          [options]="listaTipoAlocacao"
-          [(ngModel)]="alocacaoSelecionada"
-          placeholder="Selecione um tipo de alocação"
-          appendTo="body"
-          [style]="{ width: '300px' }"
-        />
-      </div>
-      <div class="flex justify-content-end gap-2">
-        <p-button
-          label="Cancelar"
-          severity="secondary"
-          (onClick)="apresentarPreenchimento = false"
-        />
-        <p-button label="Preencher" (onClick)="aplicarPreenchimento()" />
-      </div>
-    </p-dialog>
+    <ng-template pTemplate="loadingbody" let-columns="columns">
+      <tr style="height: 46px">
+        <td *ngFor="let col of columns; let even = even">
+          <p-skeleton
+            [ngStyle]="{
+              width: '60%'
+            }"
+          />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="11" class="centro">Nenhum colaborador adicionado</td>
+      </tr>
+    </ng-template>
+  </p-table>
 
-    <br />
-    <div class="col-12 flex flex-column align-items-end">
-      <button
-        pButton
-        pRipple
-        (click)="enviar()"
-        label="Gravar"
-        [disabled]="desabilitar"
-        class="p-button-success"
-      ></button>
+  <p-dialog
+    header="Filtro de Datas"
+    [modal]="true"
+    [(visible)]="apresentarFiltroData"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+    [style]="{ width: '50vw' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <div class="flex align-items-center gap-3 mb-3">
+      <label class="font-semibold w-6rem">Data Início</label>
+      <p-calendar
+        dateFormat="dd/mm/yy"
+        [(ngModel)]="dataInicio"
+        appendTo="body"
+      />
     </div>
-  </ng-template>
+    <div class="flex align-items-center gap-3 mb-5">
+      <label class="font-semibold w-6rem">Data Final</label>
+      <p-calendar
+        dateFormat="dd/mm/yy"
+        [(ngModel)]="dataFinal"
+        appendTo="body"
+        [ngClass]="{
+          'ng-invalid ng-dirty': erroNasDatas
+        }"
+      />
+      <span *ngIf="erroNasDatas" class="p-error">
+        Data Início maior que a Final.
+      </span>
+    </div>
+
+    <div class="flex align-items-center gap-3 mb-5">
+      <p-messages
+        [(value)]="messages"
+        [enableService]="false"
+        [closable]="false"
+      />
+    </div>
+
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        (onClick)="apresentarFiltroData = false"
+      />
+      <p-button label="Buscar" (onClick)="aplicarFiltroData()" />
+    </div>
+  </p-dialog>
+
+  <p-dialog
+    header="Preenchimento automático"
+    [modal]="true"
+    [(visible)]="apresentarPreenchimento"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+    [style]="{ width: '50vw' }"
+    [draggable]="false"
+    [resizable]="false"
+  >
+    <div class="flex align-items-center gap-3 mb-3">
+      <label class="font-semibold w-6rem">Data Início</label>
+      <p-calendar
+        dateFormat="dd/mm/yy"
+        [(ngModel)]="dataInicioPreenchimento"
+        [minDate]="dataInicio"
+        [maxDate]="dataFinal"
+        appendTo="body"
+      />
+    </div>
+    <div class="flex align-items-center gap-3 mb-5">
+      <label class="font-semibold w-6rem">Data Final</label>
+      <p-calendar
+        dateFormat="dd/mm/yy"
+        [(ngModel)]="dataFinalPreenchimento"
+        [minDate]="dataInicio"
+        [maxDate]="dataFinal"
+        appendTo="body"
+        [ngClass]="{
+          'ng-invalid ng-dirty': erroNasDatas
+        }"
+      />
+      <span *ngIf="erroNasDatas" class="p-error">
+        Data Início maior que a Final.
+      </span>
+    </div>
+    <div class="flex align-items-center gap-3 mb-5">
+      <label class="font-semibold w-6rem">Tipo de Alocação</label>
+      <p-dropdown
+        [options]="listaTipoAlocacao"
+        [(ngModel)]="alocacaoSelecionada"
+        placeholder="Selecione um tipo de alocação"
+        appendTo="body"
+        [style]="{ width: '300px' }"
+      />
+    </div>
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        (onClick)="apresentarPreenchimento = false"
+      />
+      <p-button label="Preencher" (onClick)="aplicarPreenchimento()" />
+    </div>
+  </p-dialog>
+
+  <br />
+  <div class="col-12 flex flex-column align-items-end">
+    <button
+      pButton
+      pRipple
+      (click)="enviar()"
+      label="Gravar"
+      [disabled]="desabilitar"
+      class="p-button-success"
+    ></button>
+  </div>
 </p-card>

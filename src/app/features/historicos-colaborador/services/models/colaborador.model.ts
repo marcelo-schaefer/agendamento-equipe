@@ -1,8 +1,8 @@
-import { DataApontamento } from './data-apontamento';
 import { Lancamento } from './lancamento';
 import { Projeto } from './projeto.model';
 
 export interface Colaborador {
+  id: number;
   NEmpresa: string;
   NTipoColaborador: string;
   NMatricula: string;
@@ -12,6 +12,7 @@ export interface Colaborador {
   tipoAlocacaoSelecionado: string;
   lancamentos: Lancamento[];
   validandoCampos: boolean;
+  duplicado: boolean;
 }
 
 export class RetornoColaborador {

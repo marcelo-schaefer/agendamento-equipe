@@ -8,3 +8,19 @@
 .centro {
   text-align: center;
 }
+
+.nome-duplicado {
+  color: red;
+  font-weight: bold;
+}
+
+.texto-vermelho {
+  color: red;
+}
+
+td span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
